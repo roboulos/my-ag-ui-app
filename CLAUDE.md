@@ -307,6 +307,246 @@ cp .env.local.example .env.local
 5. **Add component editing**: Allow users to modify generated components
 6. **Implement export functionality**: Export components as code/images
 
+## 🎨 Thesys-Inspired Premium Design System
+
+### Theme Configuration
+The app uses a comprehensive CSS variable system for consistent theming:
+
+```css
+/* Light mode (default) */
+:root {
+  --background: 255 255 255;
+  --foreground: 0 0 0;
+  --primary: 147 51 234;      /* Purple accent #9333ea */
+  --purple-600: #9333ea;       /* Main purple for accents */
+}
+
+/* Dark mode */
+.dark {
+  --background: 15 15 15;     /* Near black */
+  --foreground: 245 245 245;  /* Near white */
+  --primary: 147 51 234;      /* Same purple works in both modes */
+}
+```
+
+### Design Principles
+1. **Purple Accent Theme**: All primary actions and highlights use purple (#9333ea)
+2. **Card-Based Layout**: All components use rounded-2xl with shadow-xl
+3. **Dark Mode First**: Designed primarily for dark mode with elegant light mode
+4. **Smooth Transitions**: All interactive elements have duration-150 or duration-300
+5. **Hover Effects**: Scale transforms (hover:scale-[1.02]) and shadow increases
+
+### Component Styling Pattern
+```typescript
+// Standard component wrapper
+<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-2xl p-6 
+                border border-gray-200 dark:border-gray-700 
+                hover:shadow-2xl dark:hover:shadow-purple-500/10 
+                transition-all duration-300">
+```
+
+## 📊 Component Implementation Patterns
+
+### KPI Card Component
+```typescript
+function KPICard({ title, value, change, icon, trend }: {
+  title: string;        // e.g., "Total Revenue"
+  value: string;        // e.g., "$1,200,000"
+  change: string;       // e.g., "+15%"
+  icon: "revenue" | "users" | "sales" | "products" | "activity";
+  trend: "up" | "down";
+}) {
+  // Color coding based on trend
+  const changeColor = trend === "up" 
+    ? "text-green-600 dark:text-green-400" 
+    : "text-red-600 dark:text-red-400";
+  
+  // Icon with purple background
+  <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl 
+                  text-purple-600 dark:text-purple-400">
+    {getIcon()}
+  </div>
+}
+```
+
+### Chart Styling Updates
+- Replace all blue colors with purple gradients
+- Use `from-purple-600 to-purple-400` for gradients
+- Apply `toLocaleString()` for number formatting
+- Add hover states for interactive elements
+
+### Dashboard Component Fix
+```typescript
+// CRITICAL: When rendering nested components in a dashboard
+<ComponentRenderer component={{ 
+  ...comp, 
+  id: `${i}`,
+  type: comp.type || "generateVisualization",  // Ensure type is set
+  props: comp.props || comp,                   // Handle both formats
+  timestamp: new Date().toISOString()
+}} />
+```
+
+## 🎭 Animation Classes
+
+### Custom Animations (in globals.css)
+```css
+/* Slide up animation for cards */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up { animation: slide-up 0.6s ease-out forwards; }
+
+/* Count up for numbers */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-count-up { animation: countUp 0.8s ease-out forwards; }
+
+/* Expand animation for bars */
+@keyframes expand {
+  from { width: 0%; opacity: 0; }
+  to { width: var(--target-width); opacity: 1; }
+}
+.animate-expand { animation: expand 1s ease-out forwards; }
+```
+
+### Animation Usage Pattern
+```typescript
+// Stagger animations with delay
+{items.map((item, i) => (
+  <div 
+    key={i} 
+    className="animate-fade-in" 
+    style={{ animationDelay: `${i * 0.1}s` }}
+  >
+    {item}
+  </div>
+))}
+```
+
+## 🐛 Known Issues and Solutions
+
+### Issue 1: Dashboard Components Not Rendering
+**Problem**: Nested components in dashboards don't appear
+**Solution**: Ensure each nested component has proper type and props structure
+```typescript
+// In DynamicDashboard component
+type: comp.type || "generateVisualization",
+props: comp.props || comp,
+```
+
+### Issue 2: Dark Mode Toggle
+**Solution**: Apply dark class to root element
+```typescript
+<div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+```
+
+### Issue 3: OpenAI Multiple Tool Calls
+**Current Limitation**: OpenAI typically only calls one tool at a time
+**Workaround**: Request specific components individually or use dashboard for multiple
+
+## 🔧 Backend Tool Definition Pattern
+
+### Adding New Tools (e.g., generateKPI)
+1. Add to TypeScript ComponentType union:
+```typescript
+type ComponentType = "generateVisualization" | "generateDashboard" | 
+                    "generateForm" | "generateTable" | "generateKPI";
+```
+
+2. Add tool definition in route.ts:
+```typescript
+{
+  type: "function",
+  function: {
+    name: "generateKPI",
+    description: "Generate a KPI (Key Performance Indicator) card",
+    parameters: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "KPI title/label" },
+        value: { type: "string", description: "Main value" },
+        change: { type: "string", description: "Change %" },
+        icon: { type: "string", enum: ["revenue", "users", "sales"] },
+        trend: { type: "string", enum: ["up", "down"] }
+      },
+      required: ["title", "value", "change", "trend"]
+    }
+  }
+}
+```
+
+3. Add to ComponentRenderer switch:
+```typescript
+case "generateKPI":
+  return <KPICard {...component.props} />;
+```
+
+4. Add description helper:
+```typescript
+case "generateKPI":
+  return `I've created a KPI card showing "${props.title}" with a value of ${props.value}.`;
+```
+
+## 🎯 Visual Development Best Practices
+
+### Iterative Design Process
+1. **Always use Playwright** for visual verification
+2. **Take screenshots** after every significant change
+3. **Test both light and dark modes** for each component
+4. **Verify hover states** with browser_hover
+5. **Check responsive behavior** at different viewport sizes
+
+### Testing Workflow
+```bash
+# 1. Make component changes
+# 2. Take screenshot
+mcp__playwright__browser_take_screenshot --filename "before-styling.png"
+
+# 3. Apply styling updates
+# 4. Take comparison screenshot
+mcp__playwright__browser_take_screenshot --filename "after-styling.png"
+
+# 5. Test interactions
+mcp__playwright__browser_hover --element "KPI card" --ref "e123"
+
+# 6. Toggle dark mode
+mcp__playwright__browser_click --element "Theme toggle" --ref "e13"
+```
+
+## 📦 Complete Working Stack
+
+### Core Dependencies (Confirmed Working)
+```json
+{
+  "dependencies": {
+    "next": "15.4.5",           // App Router + Turbopack
+    "react": "19.1.0",          // Latest React
+    "openai": "^4.104.0",       // Tool calling support
+    "lucide-react": "^0.536.0", // Icon library
+    "tailwindcss": "^4"         // v4 with new features
+  }
+}
+```
+
+### Tailwind Configuration
+- Uses Tailwind CSS v4 with `@import "tailwindcss"`
+- Custom animations defined in globals.css
+- CSS variables for theming with RGB values
+- Dark mode with class strategy
+
 ## Important Context
 
-This project successfully demonstrates the AG UI protocol's power for dynamic, generative UI. Components are created on-the-fly based on conversation context, with proper separation between the chat interface (right) and the main content area (left) where components are rendered. The implementation uses direct SSE streaming without relying on the @ag-ui/client library, which proved to be the key to making it work correctly.
+This project successfully demonstrates the AG UI protocol's power for dynamic, generative UI with a premium Thesys-inspired design. The implementation features:
+
+1. **Complete theming system** with CSS variables for easy customization
+2. **Purple accent theme** throughout all components
+3. **Smooth dark mode** transitions with proper contrast
+4. **Professional animations** that enhance user experience
+5. **Working SSE implementation** without @ag-ui/client dependencies
+6. **Visual-first development** using Playwright for quality assurance
+
+The key insight is that visual iteration with Playwright is essential for achieving premium UI quality. Every change should be visually verified, tested in both themes, and refined until it meets professional standards.
