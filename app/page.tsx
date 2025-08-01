@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   LineChart, BarChart, PieChart, Activity, TrendingUp, 
   DollarSign, Users, Package, ShoppingCart, Calendar,
   ChevronRight, MoreVertical, Download, Share2, Filter,
-  Search, Bell, Settings, Menu, X, Loader2
+  Search, Bell, Settings, Menu, X, Loader2, Send,
+  Moon, Sun, RotateCcw
 } from "lucide-react";
 
 // Dynamic component types
-type ComponentType = "generateVisualization" | "generateDashboard" | "generateForm" | "generateTable";
+type ComponentType = "generateVisualization" | "generateDashboard" | "generateForm" | "generateTable" | "generateKPI";
 
 interface UIComponent {
   id: string;
@@ -43,13 +44,13 @@ function DynamicVisualization({ type, title, data, config }: any) {
             {data.map((point: any, i: number) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-2">
                 <div 
-                  className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t animate-grow-up"
+                  className="w-full bg-gradient-to-t from-purple-600 to-purple-400 rounded-t animate-grow-up"
                   style={{ 
                     height: `${(point.value / Math.max(...data.map((d: any) => d.value))) * 100}%`,
                     animationDelay: `${i * 0.1}s`
                   }}
                 />
-                <span className="text-xs text-gray-500">{point.label}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{point.label}</span>
               </div>
             ))}
           </div>
@@ -60,16 +61,16 @@ function DynamicVisualization({ type, title, data, config }: any) {
           <div className="h-64 flex flex-col justify-between gap-2 p-4">
             {data.slice(0, 5).map((item: any, i: number) => (
               <div key={i} className="flex items-center gap-3">
-                <span className="text-sm w-20 text-gray-600">{item.label}</span>
-                <div className="flex-1 bg-gray-200 rounded-full h-8 overflow-hidden">
+                <span className="text-sm w-24 text-gray-600 dark:text-gray-400">{item.label}</span>
+                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-8 overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full flex items-center justify-end px-3 animate-expand"
+                    className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full flex items-center justify-end px-3 animate-expand transition-all duration-500"
                     style={{ 
                       "--target-width": `${(item.value / Math.max(...data.map((d: any) => d.value))) * 100}%`,
                       animationDelay: `${i * 0.1}s`
                     } as any}
                   >
-                    <span className="text-xs text-white font-medium">{item.value}</span>
+                    <span className="text-xs text-white font-medium">{item.value.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -105,15 +106,15 @@ function DynamicVisualization({ type, title, data, config }: any) {
                       key={i}
                       d={path}
                       fill={CHART_COLORS[i % CHART_COLORS.length]}
-                      className="animate-scale-in"
+                      className="animate-scale-in hover:opacity-80 transition-opacity cursor-pointer"
                       style={{ animationDelay: `${i * 0.1}s` }}
                     />
                   );
                 })}
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center transform rotate-0">
-                <span className="text-2xl font-bold">{total}</span>
-                <span className="text-sm text-gray-500">Total</span>
+                <span className="text-2xl font-bold dark:text-white">{total.toLocaleString()}</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">Total</span>
               </div>
             </div>
             <div className="ml-8 space-y-2">
@@ -123,7 +124,7 @@ function DynamicVisualization({ type, title, data, config }: any) {
                     className="w-3 h-3 rounded-full" 
                     style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
                   />
-                  <span className="text-sm">{item.label}: {item.value}</span>
+                  <span className="text-sm dark:text-gray-300">{item.label}: {item.value.toLocaleString()}</span>
                 </div>
               ))}
             </div>
@@ -133,7 +134,7 @@ function DynamicVisualization({ type, title, data, config }: any) {
       default:
         return (
           <div className="h-64 flex items-center justify-center">
-            <div className="text-gray-400">
+            <div className="text-gray-400 dark:text-gray-500">
               <Activity className="w-16 h-16 mx-auto mb-2" />
               <p>Visualization: {type}</p>
             </div>
@@ -143,16 +144,16 @@ function DynamicVisualization({ type, title, data, config }: any) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 animate-slide-up">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-2xl p-6 animate-slide-up border border-gray-200 dark:border-gray-700 hover:shadow-2xl dark:hover:shadow-purple-500/10 transition-all duration-300">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+          <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl text-purple-600 dark:text-purple-400">
             {getIcon()}
           </div>
-          <h3 className="text-lg font-semibold">{title}</h3>
+          <h3 className="text-lg font-semibold dark:text-white">{title}</h3>
         </div>
-        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-          <MoreVertical className="w-4 h-4" />
+        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-150">
+          <MoreVertical className="w-4 h-4 text-gray-500 dark:text-gray-400" />
         </button>
       </div>
       {renderChart()}
@@ -163,26 +164,26 @@ function DynamicVisualization({ type, title, data, config }: any) {
 // Dynamic Table Component
 function DynamicTable({ title, columns, data, features }: any) {
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 animate-slide-up">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-2xl p-6 animate-slide-up border border-gray-200 dark:border-gray-700 hover:shadow-2xl dark:hover:shadow-purple-500/10 transition-all duration-300">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold">{title}</h3>
+        <h3 className="text-lg font-semibold dark:text-white">{title}</h3>
         <div className="flex gap-2">
           {features?.filtering && (
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Filter className="w-4 h-4" />
+            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-150">
+              <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             </button>
           )}
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <Download className="w-4 h-4" />
+          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-150">
+            <Download className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b">
+            <tr className="border-b dark:border-gray-700">
               {columns.map((col: any, i: number) => (
-                <th key={i} className="text-left py-3 px-4 font-medium text-gray-700">
+                <th key={i} className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
                   {col.label}
                 </th>
               ))}
@@ -190,9 +191,9 @@ function DynamicTable({ title, columns, data, features }: any) {
           </thead>
           <tbody>
             {data.map((row: any, i: number) => (
-              <tr key={i} className="border-b hover:bg-gray-50 transition-colors">
+              <tr key={i} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                 {columns.map((col: any, j: number) => (
-                  <td key={j} className="py-3 px-4">
+                  <td key={j} className="py-3 px-4 text-gray-900 dark:text-gray-100">
                     {row[col.field]}
                   </td>
                 ))}
@@ -210,15 +211,15 @@ function DynamicForm({ title, fields, submitAction }: any) {
   const [formData, setFormData] = useState<any>({});
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 animate-slide-up">
-      <h3 className="text-lg font-semibold mb-6">{title}</h3>
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-2xl p-6 animate-slide-up border border-gray-200 dark:border-gray-700 hover:shadow-2xl dark:hover:shadow-purple-500/10 transition-all duration-300">
+      <h3 className="text-lg font-semibold mb-6 dark:text-white">{title}</h3>
       <form className="space-y-4">
         {fields.map((field: any, i: number) => (
           <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 0.1}s` }}>
-            <label className="block text-sm font-medium mb-2">{field.label}</label>
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">{field.label}</label>
             {field.type === "select" ? (
               <select 
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:text-white transition-all duration-150"
                 onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
               >
                 <option value="">Select {field.label}</option>
@@ -230,7 +231,7 @@ function DynamicForm({ title, fields, submitAction }: any) {
               <input
                 type={field.type || "text"}
                 placeholder={field.placeholder}
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-150"
                 onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
               />
             )}
@@ -238,7 +239,7 @@ function DynamicForm({ title, fields, submitAction }: any) {
         ))}
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-all duration-150 font-medium transform hover:scale-[1.02]"
           onClick={(e) => {
             e.preventDefault();
             console.log("Form submitted:", formData);
@@ -251,17 +252,58 @@ function DynamicForm({ title, fields, submitAction }: any) {
   );
 }
 
+// KPI Card Component
+function KPICard({ title, value, change, icon, trend }: any) {
+  const isPositive = trend === "up";
+  const changeColor = isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400";
+  const trendIcon = isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingUp className="w-4 h-4 rotate-180" />;
+  
+  const getIcon = () => {
+    switch (icon) {
+      case "revenue": return <DollarSign className="w-6 h-6" />;
+      case "users": return <Users className="w-6 h-6" />;
+      case "sales": return <ShoppingCart className="w-6 h-6" />;
+      case "products": return <Package className="w-6 h-6" />;
+      default: return <Activity className="w-6 h-6" />;
+    }
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-2xl p-6 animate-slide-up border border-gray-200 dark:border-gray-700 hover:shadow-2xl dark:hover:shadow-purple-500/10 transition-all duration-300 hover:scale-[1.02] transform">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{title}</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white animate-count-up">{value}</p>
+          <div className={`flex items-center gap-1 mt-2 ${changeColor}`}>
+            {trendIcon}
+            <span className="text-sm font-medium">{change}</span>
+          </div>
+        </div>
+        <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl text-purple-600 dark:text-purple-400">
+          {getIcon()}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Dynamic Dashboard Component
 function DynamicDashboard({ title, layout, components }: any) {
   const gridClass = layout === "masonry" ? "columns-1 md:columns-2 lg:columns-3 gap-6" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
   
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold animate-fade-in">{title}</h2>
+      <h2 className="text-2xl font-bold animate-fade-in dark:text-white">{title}</h2>
       <div className={gridClass}>
         {components.map((comp: any, i: number) => (
           <div key={i} className={layout === "masonry" ? "break-inside-avoid mb-6" : ""}>
-            <ComponentRenderer component={{ ...comp, id: `${i}` }} />
+            <ComponentRenderer component={{ 
+              ...comp, 
+              id: `${i}`,
+              type: comp.type || "generateVisualization",
+              props: comp.props || comp,
+              timestamp: new Date().toISOString()
+            }} />
           </div>
         ))}
       </div>
@@ -280,6 +322,8 @@ function ComponentRenderer({ component }: { component: UIComponent }) {
       return <DynamicForm {...component.props} />;
     case "generateDashboard":
       return <DynamicDashboard {...component.props} />;
+    case "generateKPI":
+      return <KPICard {...component.props} />;
     default:
       return null;
   }
@@ -299,6 +343,20 @@ export default function Home() {
   const [isConnected, setIsConnected] = useState(true); // Default to connected
   const [isLoading, setIsLoading] = useState(false);
   const [assistantMessage, setAssistantMessage] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, assistantMessage]);
+
+  // Reset conversation function
+  const resetConversation = () => {
+    setMessages([]);
+    setComponents([]);
+    setAssistantMessage("");
+  };
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -398,29 +456,32 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className={`min-h-screen bg-background text-foreground flex ${isDarkMode ? 'dark' : ''}`}>
       {/* Main Content Area - Left Side */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-white border-b">
+      <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-950">
+        {/* Header with theme toggle */}
+        <header className="bg-white dark:bg-gray-900 border-b dark:border-gray-800">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                   AG UI Dynamic Interface
                 </h1>
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"} animate-pulse`} />
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
                     {isConnected ? "Connected" : "Disconnected"}
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <Bell className="w-5 h-5" />
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-150"
+                >
+                  {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 </button>
-                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-150">
                   <Settings className="w-5 h-5" />
                 </button>
               </div>
@@ -428,17 +489,17 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Main Content */}
+        {/* Main Content with padding */}
         <main className="flex-1 overflow-y-auto p-6">
           {components.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-full text-center">
-              <div className="mb-8 animate-bounce-slow">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <div className="mb-8">
+                <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center animate-pulse">
                   <Activity className="w-12 h-12 text-white" />
                 </div>
               </div>
-              <h2 className="text-2xl font-semibold mb-4">Welcome to AG UI</h2>
-              <p className="text-gray-600 max-w-md mb-8">
+              <h2 className="text-2xl font-semibold mb-4 dark:text-white">Welcome to AG UI</h2>
+              <p className="text-gray-600 dark:text-gray-400 max-w-md mb-8">
                 Start a conversation in the chat panel and watch as the interface dynamically generates 
                 components based on our discussion. Try asking for charts, dashboards, forms, or tables!
               </p>
@@ -446,7 +507,9 @@ export default function Home() {
           ) : (
             <div className="space-y-6">
               {components.map((component) => (
-                <ComponentRenderer key={component.id} component={component} />
+                <div key={component.id} className="animate-slide-up">
+                  <ComponentRenderer component={component} />
+                </div>
               ))}
             </div>
           )}
@@ -454,24 +517,31 @@ export default function Home() {
       </div>
 
       {/* Chat Sidebar - Right Side */}
-      <div className="w-96 bg-white border-l flex flex-col">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold">Chat</h2>
+      <div className="w-96 bg-white dark:bg-gray-900 border-l dark:border-gray-800 flex flex-col">
+        <div className="p-4 border-b dark:border-gray-800 flex items-center justify-between">
+          <h2 className="text-lg font-semibold dark:text-white">Chat</h2>
+          <button 
+            onClick={resetConversation}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-150"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Reset
+          </button>
         </div>
         
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-950">
           {messages.length === 0 ? (
-            <div className="text-center text-gray-500 mt-8">
+            <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
               <p>Start a conversation to generate UI components</p>
             </div>
           ) : (
             messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
                 <div className={`max-w-[80%] rounded-lg p-3 ${
                   msg.role === 'user' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-100 text-gray-800'
+                    ? 'bg-purple-600 text-white' 
+                    : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border dark:border-gray-700'
                 }`}>
                   <p className="text-sm">{msg.content}</p>
                 </div>
@@ -479,23 +549,24 @@ export default function Home() {
             ))
           )}
           {isLoading && assistantMessage && (
-            <div className="flex justify-start">
-              <div className="bg-gray-100 text-gray-800 rounded-lg p-3 max-w-[80%]">
+            <div className="flex justify-start animate-fade-in">
+              <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-lg p-3 max-w-[80%] border dark:border-gray-700">
                 <p className="text-sm">{assistantMessage}</p>
               </div>
             </div>
           )}
           {isLoading && !assistantMessage && (
-            <div className="flex justify-start">
-              <div className="bg-gray-100 rounded-lg p-3">
+            <div className="flex justify-start animate-fade-in">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border dark:border-gray-700">
                 <Loader2 className="w-4 h-4 animate-spin" />
               </div>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Chat Input */}
-        <div className="p-4 border-t">
+        <div className="p-4 border-t dark:border-gray-800 bg-white dark:bg-gray-900">
           <div className="flex gap-2">
             <input
               type="text"
@@ -503,15 +574,15 @@ export default function Home() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
               placeholder="Ask me to create UI components..."
-              className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-800 border-0 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none text-sm transition-all duration-150"
               disabled={!isConnected || isLoading}
             />
             <button
               onClick={sendMessage}
               disabled={!isConnected || isLoading || !input.trim()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ChevronRight className="w-4 h-4" />
+              <Send className="w-4 h-4" />
             </button>
           </div>
         </div>

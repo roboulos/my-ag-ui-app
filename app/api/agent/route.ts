@@ -56,6 +56,8 @@ function getComponentDescription(componentType: string, props: any): string {
       return `I've created a form titled "${props.title}" with ${props.fields?.length || 0} fields.`;
     case "generateTable":
       return `I've generated a table titled "${props.title}" with ${props.data?.length || 0} rows of data.`;
+    case "generateKPI":
+      return `I've created a KPI card showing "${props.title}" with a value of ${props.value}.`;
     default:
       return `I've created a new UI component for you.`;
   }
@@ -97,9 +99,10 @@ export async function POST(req: NextRequest) {
             {
               role: "system",
               content: `You are an AG UI agent that dynamically generates UI components based on conversation. 
-                       You can create various visualizations, dashboards, and interactive components.
+                       You can create various visualizations, dashboards, KPI cards, and interactive components.
                        Always think about what UI would best serve the user's request.
-                       Use the available tools to generate appropriate UI components.`
+                       Use the available tools to generate appropriate UI components.
+                       When showing metrics or key numbers, consider using KPI cards for a professional look.`
             },
             ...messages
           ],
@@ -237,6 +240,32 @@ export async function POST(req: NextRequest) {
                     }
                   },
                   required: ["title", "columns", "data"]
+                }
+              }
+            },
+            {
+              type: "function",
+              function: {
+                name: "generateKPI",
+                description: "Generate a KPI (Key Performance Indicator) card",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string", description: "KPI title/label" },
+                    value: { type: "string", description: "Main KPI value (e.g., '$10,500', '1,234', '85%')" },
+                    change: { type: "string", description: "Change percentage or value (e.g., '+12.5%', '-$500')" },
+                    icon: { 
+                      type: "string", 
+                      enum: ["revenue", "users", "sales", "products", "activity"],
+                      description: "Icon type to display" 
+                    },
+                    trend: { 
+                      type: "string", 
+                      enum: ["up", "down"],
+                      description: "Trend direction" 
+                    }
+                  },
+                  required: ["title", "value", "change", "trend"]
                 }
               }
             }
