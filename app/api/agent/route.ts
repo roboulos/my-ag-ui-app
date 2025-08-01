@@ -58,6 +58,22 @@ function getComponentDescription(componentType: string, props: any): string {
       return `I've generated a table titled "${props.title}" with ${props.data?.length || 0} rows of data.`;
     case "generateKPI":
       return `I've created a KPI card showing "${props.title}" with a value of ${props.value}.`;
+    case "generateDataTable":
+      return `I've created an advanced data table titled "${props.title}" with sorting, filtering, and pagination features.`;
+    case "generateTimeline":
+      return `I've created a timeline component titled "${props.title}" showing ${props.events?.length || 0} events.`;
+    case "generateDocumentViewer":
+      return `I've created a document viewer for "${props.title}" with navigation and annotation features.`;
+    case "generateRichTextEditor":
+      return `I've created a rich text editor titled "${props.title}" with formatting tools.`;
+    case "generateCalendar":
+      return `I've created a calendar component titled "${props.title}" with event management capabilities.`;
+    case "generateFileUpload":
+      return `I've created a file upload interface titled "${props.title}" with drag-and-drop support.`;
+    case "generateSettingsPanel":
+      return `I've created a settings panel titled "${props.title}" with ${props.sections?.length || 0} configuration sections.`;
+    case "generateAnalyticsDashboard":
+      return `I've created an analytics dashboard titled "${props.title}" with comprehensive data visualization.`;
     default:
       return `I've created a new UI component for you.`;
   }
@@ -266,6 +282,357 @@ export async function POST(req: NextRequest) {
                     }
                   },
                   required: ["title", "value", "change", "trend"]
+                }
+              }
+            },
+            {
+              type: "function",
+              function: {
+                name: "generateDataTable",
+                description: "Generate an advanced data table with sorting, filtering, and pagination",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string", description: "Table title" },
+                    columns: { 
+                      type: "array", 
+                      description: "Column definitions with advanced features",
+                      items: {
+                        type: "object",
+                        properties: {
+                          field: { type: "string", description: "Field key in data" },
+                          label: { type: "string", description: "Column header label" },
+                          type: { type: "string", enum: ["text", "number", "date", "currency", "badge"], description: "Column data type" },
+                          sortable: { type: "boolean", description: "Whether column is sortable" },
+                          filterable: { type: "boolean", description: "Whether column is filterable" }
+                        },
+                        required: ["field", "label"]
+                      }
+                    },
+                    data: { 
+                      type: "array", 
+                      description: "Row data",
+                      items: {
+                        type: "object",
+                        properties: {},
+                        additionalProperties: true
+                      }
+                    },
+                    features: { 
+                      type: "object", 
+                      description: "Advanced table features",
+                      properties: {
+                        sorting: { type: "boolean", description: "Enable sorting" },
+                        filtering: { type: "boolean", description: "Enable filtering" },
+                        pagination: { type: "boolean", description: "Enable pagination" },
+                        search: { type: "boolean", description: "Enable global search" },
+                        export: { type: "boolean", description: "Enable data export" },
+                        selection: { type: "boolean", description: "Enable row selection" }
+                      },
+                      additionalProperties: false
+                    },
+                    pageSize: { type: "number", description: "Default page size for pagination" }
+                  },
+                  required: ["title", "columns", "data"]
+                }
+              }
+            },
+            {
+              type: "function",
+              function: {
+                name: "generateTimeline",
+                description: "Generate a timeline component for project tracking and workflows",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string", description: "Timeline title" },
+                    type: { type: "string", enum: ["vertical", "horizontal"], description: "Timeline orientation" },
+                    events: { 
+                      type: "array", 
+                      description: "Timeline events",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", description: "Event ID" },
+                          title: { type: "string", description: "Event title" },
+                          description: { type: "string", description: "Event description" },
+                          date: { type: "string", description: "Event date/time" },
+                          status: { type: "string", enum: ["completed", "in-progress", "pending", "cancelled"], description: "Event status" },
+                          icon: { type: "string", description: "Icon name for the event" },
+                          color: { type: "string", description: "Color theme for the event" }
+                        },
+                        required: ["id", "title", "date", "status"]
+                      }
+                    },
+                    showProgress: { type: "boolean", description: "Show overall progress indicator" }
+                  },
+                  required: ["title", "events"]
+                }
+              }
+            },
+            {
+              type: "function",
+              function: {
+                name: "generateDocumentViewer",
+                description: "Generate an interactive document viewer with navigation and annotations",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string", description: "Document viewer title" },
+                    documentType: { type: "string", enum: ["pdf", "markdown", "text", "code"], description: "Type of document" },
+                    content: { type: "string", description: "Document content or URL" },
+                    features: { 
+                      type: "object", 
+                      description: "Viewer features",
+                      properties: {
+                        search: { type: "boolean", description: "Enable text search" },
+                        annotations: { type: "boolean", description: "Enable annotations" },
+                        navigation: { type: "boolean", description: "Enable page/section navigation" },
+                        download: { type: "boolean", description: "Enable download" },
+                        fullscreen: { type: "boolean", description: "Enable fullscreen mode" }
+                      },
+                      additionalProperties: false
+                    },
+                    pages: { 
+                      type: "array", 
+                      description: "Document pages/sections",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", description: "Page ID" },
+                          title: { type: "string", description: "Page title" },
+                          content: { type: "string", description: "Page content" }
+                        },
+                        required: ["id", "title"]
+                      }
+                    }
+                  },
+                  required: ["title", "documentType"]
+                }
+              }
+            },
+            {
+              type: "function",
+              function: {
+                name: "generateRichTextEditor",
+                description: "Generate a rich text editor with formatting tools",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string", description: "Editor title" },
+                    initialContent: { type: "string", description: "Initial editor content" },
+                    features: { 
+                      type: "object", 
+                      description: "Editor features and toolbar options",
+                      properties: {
+                        bold: { type: "boolean", description: "Bold formatting" },
+                        italic: { type: "boolean", description: "Italic formatting" },
+                        underline: { type: "boolean", description: "Underline formatting" },
+                        lists: { type: "boolean", description: "Ordered and unordered lists" },
+                        links: { type: "boolean", description: "Link insertion" },
+                        images: { type: "boolean", description: "Image insertion" },
+                        tables: { type: "boolean", description: "Table insertion" },
+                        codeBlocks: { type: "boolean", description: "Code block formatting" },
+                        headings: { type: "boolean", description: "Heading levels" }
+                      },
+                      additionalProperties: false
+                    },
+                    placeholder: { type: "string", description: "Placeholder text" },
+                    maxLength: { type: "number", description: "Maximum character count" }
+                  },
+                  required: ["title"]
+                }
+              }
+            },
+            {
+              type: "function",
+              function: {
+                name: "generateCalendar",
+                description: "Generate a calendar component with event management",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string", description: "Calendar title" },
+                    view: { type: "string", enum: ["month", "week", "day", "agenda"], description: "Default calendar view" },
+                    events: { 
+                      type: "array", 
+                      description: "Calendar events",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", description: "Event ID" },
+                          title: { type: "string", description: "Event title" },
+                          description: { type: "string", description: "Event description" },
+                          start: { type: "string", description: "Start date/time" },
+                          end: { type: "string", description: "End date/time" },
+                          allDay: { type: "boolean", description: "All-day event" },
+                          color: { type: "string", description: "Event color" },
+                          category: { type: "string", description: "Event category" }
+                        },
+                        required: ["id", "title", "start"]
+                      }
+                    },
+                    features: { 
+                      type: "object", 
+                      description: "Calendar features",
+                      properties: {
+                        addEvents: { type: "boolean", description: "Allow adding new events" },
+                        editEvents: { type: "boolean", description: "Allow editing events" },
+                        deleteEvents: { type: "boolean", description: "Allow deleting events" },
+                        dragDrop: { type: "boolean", description: "Drag and drop events" },
+                        timeSlots: { type: "boolean", description: "Show time slot details" }
+                      },
+                      additionalProperties: false
+                    }
+                  },
+                  required: ["title"]
+                }
+              }
+            },
+            {
+              type: "function",
+              function: {
+                name: "generateFileUpload",
+                description: "Generate a file upload interface with drag-and-drop support",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string", description: "Upload interface title" },
+                    acceptedTypes: { 
+                      type: "array", 
+                      description: "Accepted file types",
+                      items: { type: "string" }
+                    },
+                    maxFileSize: { type: "number", description: "Maximum file size in MB" },
+                    maxFiles: { type: "number", description: "Maximum number of files" },
+                    features: { 
+                      type: "object", 
+                      description: "Upload features",
+                      properties: {
+                        dragDrop: { type: "boolean", description: "Drag and drop support" },
+                        preview: { type: "boolean", description: "File preview" },
+                        progress: { type: "boolean", description: "Upload progress indicators" },
+                        validation: { type: "boolean", description: "File validation" },
+                        thumbnails: { type: "boolean", description: "Image thumbnails" }
+                      },
+                      additionalProperties: false
+                    },
+                    uploadUrl: { type: "string", description: "Upload endpoint URL" },
+                    placeholder: { type: "string", description: "Placeholder text for the upload area" }
+                  },
+                  required: ["title"]
+                }
+              }
+            },
+            {
+              type: "function",
+              function: {
+                name: "generateSettingsPanel",
+                description: "Generate a settings panel with various configuration options",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string", description: "Settings panel title" },
+                    sections: { 
+                      type: "array", 
+                      description: "Settings sections",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", description: "Section ID" },
+                          title: { type: "string", description: "Section title" },
+                          description: { type: "string", description: "Section description" },
+                          settings: {
+                            type: "array",
+                            description: "Settings in this section",
+                            items: {
+                              type: "object",
+                              properties: {
+                                id: { type: "string", description: "Setting ID" },
+                                label: { type: "string", description: "Setting label" },
+                                description: { type: "string", description: "Setting description" },
+                                type: { type: "string", enum: ["toggle", "select", "input", "slider", "color", "file"], description: "Input type" },
+                                value: { description: "Current value" },
+                                options: { type: "array", items: { type: "string" }, description: "Options for select type" },
+                                min: { type: "number", description: "Minimum value for slider" },
+                                max: { type: "number", description: "Maximum value for slider" }
+                              },
+                              required: ["id", "label", "type"]
+                            }
+                          }
+                        },
+                        required: ["id", "title", "settings"]
+                      }
+                    },
+                    layout: { type: "string", enum: ["tabs", "accordion", "sidebar"], description: "Panel layout style" }
+                  },
+                  required: ["title", "sections"]
+                }
+              }
+            },
+            {
+              type: "function",
+              function: {
+                name: "generateAnalyticsDashboard",
+                description: "Generate a comprehensive analytics dashboard with multiple visualizations",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string", description: "Dashboard title" },
+                    timeRange: { type: "string", enum: ["today", "week", "month", "quarter", "year", "custom"], description: "Default time range" },
+                    metrics: { 
+                      type: "array", 
+                      description: "Key metrics to display",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", description: "Metric ID" },
+                          title: { type: "string", description: "Metric title" },
+                          value: { type: "string", description: "Current value" },
+                          change: { type: "string", description: "Change percentage" },
+                          trend: { type: "string", enum: ["up", "down", "neutral"], description: "Trend direction" },
+                          icon: { type: "string", description: "Metric icon" }
+                        },
+                        required: ["id", "title", "value"]
+                      }
+                    },
+                    charts: { 
+                      type: "array", 
+                      description: "Chart components",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", description: "Chart ID" },
+                          title: { type: "string", description: "Chart title" },
+                          type: { type: "string", enum: ["line", "bar", "pie", "area", "scatter", "heatmap"], description: "Chart type" },
+                          data: { 
+                            type: "array", 
+                            description: "Chart data",
+                            items: {
+                              type: "object",
+                              properties: {},
+                              additionalProperties: true
+                            }
+                          },
+                          size: { type: "string", enum: ["small", "medium", "large", "full"], description: "Chart size" }
+                        },
+                        required: ["id", "title", "type", "data"]
+                      }
+                    },
+                    features: { 
+                      type: "object", 
+                      description: "Dashboard features",
+                      properties: {
+                        realTime: { type: "boolean", description: "Real-time data updates" },
+                        export: { type: "boolean", description: "Export capabilities" },
+                        filters: { type: "boolean", description: "Data filtering" },
+                        customization: { type: "boolean", description: "Layout customization" },
+                        alerts: { type: "boolean", description: "Alert notifications" }
+                      },
+                      additionalProperties: false
+                    }
+                  },
+                  required: ["title", "metrics", "charts"]
                 }
               }
             }
