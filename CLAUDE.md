@@ -56,11 +56,40 @@ For complex implementations, use the Task tool with subagents:
 
 ## Commands
 
+### 🚀 SERVER MANAGEMENT - 100% EFFICIENT
+**Use EXACTLY these commands. No variations. No creativity.**
+
 ```bash
-# Development
-PORT=3004 npm run dev    # Always use port 3004 for consistency
+# ✅ CHECK STATUS (always run first)
+lsof -i :3004
+
+# ✅ START SERVER (only if nothing running on port 3004)
+NEXT_LINT=false PORT=3004 npm run dev &
+
+# ✅ KILL SERVER (if needed to restart)
+lsof -ti:3004 | xargs kill -9
+
+# ✅ RESTART SERVER (kill then start)
+lsof -ti:3004 | xargs kill -9 && sleep 2 && NEXT_LINT=false PORT=3004 npm run dev &
+
+# ✅ VERIFY RUNNING (after start/restart)
+curl -I http://localhost:3004 --max-time 5
+
+# ❌ NEVER USE THESE:
+# - kill -9 <pid> (manual process hunting)
+# - PORT=3004 npm run dev (without NEXT_LINT=false)
+# - Background processes without &
+# - Multiple server start attempts
+# - ps aux | grep commands
+```
+
+### 🛠 DEVELOPMENT COMMANDS
+
+```bash
+# Build & Validation
 npm run build            # Production build (has issues - use dev)
 npm run lint             # Run ESLint
+npm run typecheck        # Type checking
 
 # Git Workflow
 git add -A && git status
