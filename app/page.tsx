@@ -144,90 +144,74 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="grid grid-cols-1 lg:grid-cols-5 h-screen">
-        {/* Document Viewer Panel - 60% width on desktop */}
-        <div className="lg:col-span-3 p-8 border-r border-gray-200 dark:border-gray-700 overflow-y-auto bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-          <DocumentViewer document={currentDocument} />
-        </div>
-        
-        {/* Instructions Panel - 40% width on desktop */}
-        <div className="lg:col-span-2 p-8 overflow-y-auto bg-white dark:bg-gray-900">
-          <main className="max-w-2xl mx-auto">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold mb-3 text-gray-900 dark:text-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-8">
+      <div className="max-w-7xl mx-auto">
+        {currentDocument ? (
+          // Document Display View
+          <div className="animate-fade-in">
+            <DocumentViewer document={currentDocument} onBack={() => setCurrentDocument(null)} />
+          </div>
+        ) : (
+          // Initial Welcome View
+          <div className="animate-fade-in">
+            <div className="text-center mb-12">
+              <h1 className="text-5xl font-bold mb-4 text-gray-900 dark:text-white">
                 Business Intelligence Dashboard
               </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-300">
+              <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
                 AI-Powered Document Viewer with Context Awareness
+              </p>
+              <div className="text-8xl mb-8 animate-bounce-slow">📊</div>
+              <p className="text-lg text-gray-500 dark:text-gray-400">
+                Start a conversation with the AI assistant to explore your business data
               </p>
             </div>
 
-            {/* Instructions */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 shadow-lg">
-              <h3 className="text-xl font-semibold mb-4 text-blue-900 dark:text-blue-100">
-                📊 Available Business Documents
-              </h3>
-              <div className="space-y-3">
-                <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Revenue Analysis</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Try: "Show me the revenue chart" or "What's our income?"</p>
+            {/* Document Preview Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
+              {mockDocuments.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
+                  onClick={() => setCurrentDocument(doc)}
+                >
+                  <div className="text-4xl mb-4">
+                    {doc.type === 'chart' && doc.data.type === 'bar' && '📊'}
+                    {doc.type === 'chart' && doc.data.type === 'line' && '📈'}
+                    {doc.type === 'chart' && doc.data.type === 'pie' && '🥧'}
+                    {doc.type === 'metrics' && '🎯'}
+                  </div>
+                  <h3 className="font-semibold text-lg mb-2 text-gray-800 dark:text-gray-100">
+                    {doc.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {doc.keywords.slice(0, 3).join(', ')}
+                  </p>
+                  <div className="mt-4 text-xs text-blue-600 dark:text-blue-400">
+                    Click to preview →
+                  </div>
                 </div>
-                <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Growth Trends</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Try: "Display growth trends" or "Show our progress"</p>
-                </div>
-                <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Market Position</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Try: "What's our market share?" or "Show competitors"</p>
-                </div>
-                <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Key Metrics</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Try: "Show KPIs" or "Display our metrics dashboard"</p>
-                </div>
-              </div>
+              ))}
             </div>
 
-            {/* Features */}
-            <div className="mt-8 grid gap-4 md:grid-cols-2">
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-                <div className="text-2xl mb-2">🎯</div>
-                <h4 className="font-semibold text-gray-800 dark:text-gray-100">Context-Aware</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Documents appear based on conversation
-                </p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-                <div className="text-2xl mb-2">📈</div>
-                <h4 className="font-semibold text-gray-800 dark:text-gray-100">Live Updates</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Real-time data visualization
-                </p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-                <div className="text-2xl mb-2">🎨</div>
-                <h4 className="font-semibold text-gray-800 dark:text-gray-100">Interactive Charts</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Hover for details, smooth animations
-                </p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-                <div className="text-2xl mb-2">🤖</div>
-                <h4 className="font-semibold text-gray-800 dark:text-gray-100">AI Integration</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Powered by AG UI protocol
-                </p>
+            {/* AI Assistant Hint */}
+            <div className="mt-12 text-center">
+              <div className="inline-flex items-center bg-blue-50 dark:bg-blue-900/20 rounded-full px-6 py-3">
+                <span className="text-blue-600 dark:text-blue-400 mr-2">💡</span>
+                <span className="text-sm text-blue-700 dark:text-blue-300">
+                  Try asking: "Show me the revenue chart" or "What are our key metrics?"
+                </span>
               </div>
             </div>
-          </main>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 // Document Viewer Component
-function DocumentViewer({ document }: { document: BusinessDocument | null }) {
+function DocumentViewer({ document, onBack }: { document: BusinessDocument | null; onBack: () => void }) {
   if (!document) {
     return (
       <div className="flex items-center justify-center h-full animate-fade-in">
@@ -246,15 +230,26 @@ function DocumentViewer({ document }: { document: BusinessDocument | null }) {
 
   return (
     <div className="h-full animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-          {document.title}
-        </h2>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            Last updated: {new Date().toLocaleTimeString()}
-          </span>
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+      <div className="mb-6">
+        <button
+          onClick={onBack}
+          className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors mb-4"
+        >
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Dashboard
+        </button>
+        <div className="flex items-center justify-between">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+            {document.title}
+          </h2>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Last updated: {new Date().toLocaleTimeString()}
+            </span>
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          </div>
         </div>
       </div>
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8 min-h-[500px] border border-gray-100 dark:border-gray-700">
