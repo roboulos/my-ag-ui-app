@@ -63,7 +63,7 @@ export function CollaborationPanel() {
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <div>
       {/* Main collaboration button */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
         <button

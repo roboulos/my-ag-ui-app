@@ -6,13 +6,13 @@ import { PremiumChatSidebar } from "@/components/chat/PremiumChatSidebar";
 
 export default function Home() {
   return (
-    <div className="flex h-screen">
-      {/* Main Content Area with Dashboard */}
-      <div className="flex-1">
+    <div className="flex h-screen overflow-hidden">
+      {/* Main Content Area with Dashboard - scrollable */}
+      <div className="flex-1 overflow-y-auto">
         <Dashboard />
       </div>
 
-      {/* Premium Chat Sidebar */}
+      {/* Premium Chat Sidebar - sticky */}
       <PremiumChatSidebar
         instructions={`You are an AI assistant that can read and modify the dashboard state in real-time. 
 
@@ -48,8 +48,10 @@ Your changes will appear immediately in the main dashboard area and will be sync
         clickOutsideToClose={false}
       />
 
-      {/* Collaboration Panel */}
-      <CollaborationPanel />
+      {/* Collaboration Panel - positioned absolute to overlay */}
+      <div className="absolute top-4 right-4 z-50">
+        <CollaborationPanel />
+      </div>
     </div>
   );
 }

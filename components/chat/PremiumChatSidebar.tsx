@@ -211,7 +211,7 @@ What would you like to do?`;
   }
 
   return (
-    <div className="w-96 h-full bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 flex flex-col shadow-2xl">
+    <div className="w-96 h-screen bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 flex flex-col shadow-2xl sticky top-0">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-4 text-white">
         <div className="flex items-center justify-between">
