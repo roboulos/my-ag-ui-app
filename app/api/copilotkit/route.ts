@@ -5,17 +5,17 @@ import {
 } from "@copilotkit/runtime";
 import { NextRequest } from "next/server";
 
-// Initialize the CopilotKit runtime (actions are defined in frontend components)
-const copilotKit = new CopilotRuntime();
+const runtime = new CopilotRuntime();
 
-// Create the API handler with OpenAI integration
-const handler = copilotRuntimeNextJSAppRouterEndpoint({
-  runtime: copilotKit,
-  serviceAdapter: new OpenAIAdapter({ 
-    model: "gpt-4",
-    apiKey: process.env.OPENAI_API_KEY
-  }),
-  endpoint: "/api/copilotkit"
-});
+export async function POST(req: NextRequest) {
+  const { handleRequest } = copilotRuntimeNextJSAppRouterEndpoint({
+    runtime,
+    serviceAdapter: new OpenAIAdapter({ 
+      model: "gpt-4o-mini",
+      apiKey: process.env.OPENAI_API_KEY!
+    }),
+    endpoint: "/api/copilotkit"
+  });
 
-export const POST = handler.POST;
+  return handleRequest(req);
+}

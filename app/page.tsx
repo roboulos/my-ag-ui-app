@@ -28,8 +28,6 @@ export default function HomePage() {
     <CopilotKit
       runtimeUrl="/api/copilotkit"
       showDevConsole={false}
-      // agent lock to the relevant agent
-      agent="recipe_agent"
     >
       <div
         className="min-h-screen w-full flex items-center justify-center"
@@ -207,7 +205,7 @@ const INITIAL_STATE: RecipeAgentState = {
 
 function Recipe() {
   const { state: agentState, setState: setAgentState } = useCoAgent<RecipeAgentState>({
-    name: "recipe_agent",
+    name: "recipe_assistant",
     initialState: INITIAL_STATE,
   });
 

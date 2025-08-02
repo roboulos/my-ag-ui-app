@@ -49,15 +49,23 @@ The mobile chat is a sophisticated pull-up drawer with:
 /utils/use-mobile-chat.ts  # Pull-up chat logic
 ```
 
-### 5. **API Route Simplicity**
-The CopilotKit API route is much simpler than our custom implementation:
+### 5. **API Route Pattern**
+The CopilotKit API route for direct OpenAI integration:
 ```typescript
 const runtime = new CopilotRuntime();
-const handler = copilotRuntimeNextJSAppRouterEndpoint({
-  runtime: copilotKit,
-  serviceAdapter: new OpenAIAdapter({ model: "gpt-4" }),
-  endpoint: "/api/copilotkit"
-});
+
+export async function POST(req: NextRequest) {
+  const { handleRequest } = copilotRuntimeNextJSAppRouterEndpoint({
+    runtime,
+    serviceAdapter: new OpenAIAdapter({ 
+      model: "gpt-4o-mini",
+      apiKey: process.env.OPENAI_API_KEY!
+    }),
+    endpoint: "/api/copilotkit"
+  });
+
+  return handleRequest(req);
+}
 ```
 
 ### 6. **CSS-Only Visualizations Examples**
@@ -71,7 +79,7 @@ From the dojo recipe app:
 ### What AG UI Actually Is
 AG UI (Agent-User Interaction Protocol) is about **dynamic, real-time UI generation** based on conversation context. It is NOT about switching between pre-made views.
 
-## 🚀 CURRENT STATUS: Recipe Foundation Working
+## 🚀 CURRENT STATUS: Recipe Foundation Working (2025-08-02)
 
 ### What We Have Now
 - **Working Recipe App**: Direct copy from AG UI dojo that actually works
@@ -79,6 +87,7 @@ AG UI (Agent-User Interaction Protocol) is about **dynamic, real-time UI generat
 - **Mobile-Responsive**: Pull-up chat for mobile, sidebar for desktop
 - **CSS-Only UI**: No charting libraries, pure CSS visualizations
 - **Clean Foundation**: Ready to build upon with AG UI patterns
+- **AI Functionality**: "Improve with AI" button works with OpenAI integration
 
 ### Next Steps
 1. **Understand the Recipe Pattern**: Study how the dojo implements state management
@@ -197,14 +206,31 @@ mcp__playwright__browser_resize         # Test mobile view (400x800)
 
 ## 🐛 Common Issues and Solutions
 
-### Issue: "Agent 'recipe_agent' was not found"
-**Solution**: This is a console warning that doesn't affect functionality. The agent needs to be configured in the CopilotKit runtime if you want to use AI features.
+### Issue: "Agent 'recipe_assistant' was not found"
+**Solution**: This is a console warning that doesn't affect functionality when using direct OpenAI integration. The AI features work despite this error. The dojo uses external agent services (pydantic-ai, langgraph, etc.) but we've adapted it for direct OpenAI usage.
 
 ### Issue: Components not rendering
 **Solution**: Make sure you're not using any charting libraries. All visualizations must be CSS-based.
 
 ### Issue: Mobile chat not working
 **Solution**: Check that both mobile hooks are imported and the viewport is under 768px width.
+
+## 🔄 Key Differences: Dojo vs Our Implementation
+
+### Dojo Architecture
+- Uses **external agent services** (pydantic-ai, langgraph, etc.)
+- Has **dynamic integration routing** `/api/copilotkit/[integrationId]`
+- Requires **agent configuration** for each integration
+- Uses **ExperimentalEmptyAdapter** expecting external services
+
+### Our Implementation
+- Uses **direct OpenAI integration** via OpenAIAdapter
+- Simple **static API route** `/api/copilotkit`
+- **No agent configuration needed** (hence the console warning)
+- **Works despite the agent warning** - AI functionality is fully operational
+
+### Why This Works
+CopilotKit is flexible enough to work with direct OpenAI integration even though the dojo example expects external agent services. The "agent not found" warning is non-critical - the AI features work perfectly.
 
 ## Important Context
 
