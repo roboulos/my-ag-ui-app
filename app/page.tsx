@@ -2,7 +2,7 @@
 
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { CollaborationPanel } from "@/components/collaboration/CollaborationPanel";
-import { PremiumChatSidebar } from "@/components/chat/PremiumChatSidebar";
+import { CopilotSidebar } from "@copilotkit/react-ui";
 
 export default function Home() {
   return (
@@ -12,38 +12,40 @@ export default function Home() {
         <Dashboard />
       </div>
 
-      {/* Premium Chat Sidebar - sticky */}
-      <PremiumChatSidebar
-        instructions={`You are an AI assistant that can read and modify the dashboard state in real-time. 
+      {/* CopilotKit Sidebar - sticky */}
+      <CopilotSidebar
+        instructions={`You are an AI assistant that can create and modify dashboard components in real-time. 
 
-This is a COLLABORATIVE dashboard where multiple users can work together. When you make changes, all connected users will see them instantly.
+You have access to powerful component generation capabilities:
 
-You have access to the complete dashboard state including:
-- Layout (grid, list, kanban, cards)
-- Theme (light, dark)
-- Metrics (KPIs with values, trends, visibility)
-- Charts (visualizations with types, sizes, data)
-- Filters (data filtering options)
-- Settings (columns, sidebar, refresh rate)
+1. GENERATE COMPONENTS: "Create a bar chart showing revenue by month" or "Generate a KPI card for user growth"
+   - Use generateComponent action to create enhanced visualizations with Thesys-level polish
+   - Components include: multiSeriesBarChart, insightCard, comparisonTable, relatedQueries, expandableSection
+   - All components are professionally styled with smooth animations
 
-You can:
-1. READ the current state: "What's my current dashboard layout?" or "Show me all visible metrics"
-2. MODIFY the state: "Change to list layout" or "Add a revenue metric" or "Hide the sales chart"
-3. ANALYZE the data: "What trends do you see?" or "Which metrics are performing best?"
-4. COLLABORATE: Your changes are synchronized with all other users in real-time
+2. DASHBOARD CONTROL: 
+   - Layout (grid, list, kanban, cards): "Change to grid layout"
+   - Theme (light, dark): "Switch to dark mode"
+   - Grid columns (1-12): "Set grid to 8 columns"
+   - Metrics & Charts: "Add a revenue metric" or "Hide the sales chart"
 
-The dashboard updates instantly when you make changes - no refresh needed!
+3. ENHANCED FEATURES:
+   - Multi-series visualizations with legends
+   - Insight cards with key findings
+   - Comparison tables for data analysis
+   - Related query suggestions
+   - Expandable sections for detailed content
 
-Try asking things like:
-- "What dashboard settings do I currently have?"
-- "Change my layout to grid view"
-- "Add a new metric for user growth"  
-- "Hide all charts except the revenue chart"
-- "Switch to dark mode"
-- "Set grid to 8 columns"
-- "Who else is currently viewing this dashboard?"
+4. REAL-TIME COLLABORATION: Your changes are synchronized with all connected users instantly
 
-Your changes will appear immediately in the main dashboard area and will be synchronized with all other users.`}
+Try commands like:
+- "Generate a multi-series bar chart comparing sales and revenue by quarter"
+- "Create an insight card about top performing products"
+- "Add a comparison table for regional performance"
+- "Show me related queries for sales analysis"
+- "Create an expandable section with detailed metrics"
+
+All components are created with premium visual quality, smooth animations, and professional styling.`}
         defaultOpen={true}
         clickOutsideToClose={false}
       />

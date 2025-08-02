@@ -5,6 +5,7 @@ import { DashboardControls } from "./DashboardControls";
 import { MetricCard } from "./MetricCard";
 import { ChartCard } from "./ChartCard";
 import { componentFactory } from "@/lib/ComponentFactory";
+import { enhancedComponentFactory } from "@/lib/EnhancedComponentFactory";
 
 export function Dashboard() {
   const {
@@ -106,7 +107,11 @@ export function Dashboard() {
                   className="animate-component-materialize"
                   style={{ animationDelay: `${Math.random() * 0.3}s` }}
                 >
-                  {componentFactory.renderComponent(component)}
+                  {/* Use enhanced factory for enhanced components, regular factory for others */}
+                  {'category' in component && component.category ? 
+                    enhancedComponentFactory.renderComponent(component as any) :
+                    componentFactory.renderComponent(component as any)
+                  }
                 </div>
               ))}
             </div>

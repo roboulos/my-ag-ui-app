@@ -14,6 +14,7 @@ import {
   ThemeType
 } from "@/types/dashboard";
 import { componentFactory, ComponentSpec } from "@/lib/ComponentFactory";
+import { enhancedComponentFactory, EnhancedComponentSpec } from "@/lib/EnhancedComponentFactory";
 
 const DashboardContext = createContext<DashboardContextType | null>(null);
 
@@ -29,8 +30,8 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   // Use regular React state with CopilotKit integration
   const [state, setState] = useState<DashboardState>(defaultDashboardState);
   
-  // Dynamic components state
-  const [dynamicComponents, setDynamicComponents] = useState<ComponentSpec[]>([]);
+  // Dynamic components state (supports both regular and enhanced components)
+  const [dynamicComponents, setDynamicComponents] = useState<(ComponentSpec | EnhancedComponentSpec)[]>([]);
 
   // Make dashboard state readable by AI
   useCopilotReadable({
@@ -675,12 +676,20 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       }
     ],
     handler: ({ description }) => {
+      // Try enhanced factory first for higher quality components
+      const enhancedComponent = enhancedComponentFactory.createFromDescription(description);
+      if (enhancedComponent) {
+        setDynamicComponents(prev => [...prev, enhancedComponent]);
+        return `Created enhanced ${enhancedComponent.type} component with Thesys-level polish: ${JSON.stringify(enhancedComponent.props)}`;
+      }
+      
+      // Fall back to regular factory
       const component = componentFactory.createFromDescription(description);
       if (component) {
         setDynamicComponents(prev => [...prev, component]);
         return `Created ${component.type} component: ${JSON.stringify(component.props)}`;
       } else {
-        return `Could not create component from description: ${description}. Try describing a gauge, heatmap, sparkline, progress bar, toggle, slider, grid, panel, tabs, stat card, or alert banner.`;
+        return `Could not create component from description: ${description}. Try describing a comparison chart, insight card, related queries, expandable section, gauge, heatmap, sparkline, progress bar, toggle, slider, grid, panel, tabs, stat card, or alert banner.`;
       }
     }
   });
@@ -1531,6 +1540,37 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       report += `\n*Note: Predictions are based on current trends and may vary due to external factors, market changes, or strategic interventions.*`;
       
       return report;
+    }
+  });
+
+  // Dynamic Component Generation
+  useCopilotAction({
+    name: "generateComponent",
+    description: "Generate a new dynamic component from natural language description. Can create gauges, heatmaps, sparklines, progress bars, toggles, sliders, and more.",
+    parameters: [
+      {
+        name: "description",
+        type: "string",
+        description: "Natural language description of the component to create (e.g., 'create a gauge chart showing CPU usage at 75%')",
+        required: true
+      }
+    ],
+    handler: ({ description }) => {
+      // Try enhanced factory first for higher quality components
+      const enhancedComponent = enhancedComponentFactory.createFromDescription(description);
+      if (enhancedComponent) {
+        setDynamicComponents(prev => [...prev, enhancedComponent]);
+        return `Created enhanced ${enhancedComponent.type} component with Thesys-level polish: ${JSON.stringify(enhancedComponent.props)}`;
+      }
+      
+      // Fall back to regular factory
+      const component = componentFactory.createFromDescription(description);
+      if (component) {
+        setDynamicComponents(prev => [...prev, component]);
+        return `Created ${component.type} component: ${JSON.stringify(component.props)}`;
+      }
+      
+      return "Could not create component from description. Try being more specific about the component type.";
     }
   });
 
