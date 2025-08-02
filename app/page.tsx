@@ -1,5 +1,5 @@
 "use client";
-import { CopilotKit, useCoAgent, useCopilotChat } from "@copilotkit/react-core";
+import { CopilotKit, useCoAgent, useCopilotAction, useCopilotChat } from "@copilotkit/react-core";
 import { CopilotChat, CopilotSidebar } from "@copilotkit/react-ui";
 import React, { useState, useEffect, useRef } from "react";
 import { Role, TextMessage } from "@copilotkit/runtime-client-gql";
@@ -160,15 +160,14 @@ const cookingTimeValues = [
   { label: CookingTime.SixtyPlusMin, value: 4 },
 ];
 
-enum SpecialPreferences {
-  HighProtein = "High Protein",
-  LowCarb = "Low Carb",
-  Spicy = "Spicy",
-  BudgetFriendly = "Budget-Friendly",
-  OnePotMeal = "One-Pot Meal",
-  Vegetarian = "Vegetarian",
-  Vegan = "Vegan",
-}
+const dietaryOptions = [
+  "Vegetarian",
+  "Nut-free",
+  "Dairy-free",
+  "Gluten-free",
+  "Vegan",
+  "Low-carb"
+];
 
 interface Ingredient {
   icon: string;
@@ -180,7 +179,7 @@ interface Recipe {
   title: string;
   skill_level: SkillLevel;
   cooking_time: CookingTime;
-  special_preferences: string[];
+  dietary_preferences: string[];
   ingredients: Ingredient[];
   instructions: string[];
 }
@@ -194,7 +193,7 @@ const INITIAL_STATE: RecipeAgentState = {
     title: "Make Your Recipe",
     skill_level: SkillLevel.INTERMEDIATE,
     cooking_time: CookingTime.FortyFiveMin,
-    special_preferences: [],
+    dietary_preferences: [],
     ingredients: [
       { icon: "🥕", name: "Carrots", amount: "3 large, grated" },
       { icon: "🌾", name: "All-Purpose Flour", amount: "2 cups" },
@@ -208,6 +207,74 @@ function Recipe() {
     name: "recipe_assistant",
     initialState: INITIAL_STATE,
   });
+
+  useCopilotAction({
+    name: "generate_recipe",
+    description: `Generate a recipe based on the user's input based on the ingredients and instructions, proceed with the recipe to finish it. The existing ingredients and instructions are provided to you as context: ${JSON.stringify(agentState)}. If you have just created or modified the recipe, just answer in one sentence what you did. dont describe the recipe, just say what you did`,
+    parameters: [
+      {
+        name: "recipe",
+        type: "object",
+        attributes: [
+          {
+            name: "title",
+            type: "string",
+            description: "The title of the recipe"
+          },
+          {
+            name: "skill_level",
+            type: "string",
+            description: "The skill level of the recipe",
+            enum: Object.values(SkillLevel)
+          },
+          {
+            name: "cooking_time",
+            type: "string",
+            description: "The cooking time of the recipe",
+            enum: Object.values(CookingTime)
+          },
+          {
+            name: "dietary_preferences",
+            type: "string[]",
+            enum: dietaryOptions
+          },
+          {
+            name: "ingredients",
+            type: "object[]",
+            attributes: [
+              {
+                name: "icon",
+                type: "string",
+                description: "The icon of the ingredient"
+              },
+              {
+                name: "name",
+                type: "string",
+                description: "The name of the ingredient"
+              },
+              {
+                name: "amount",
+                type: "string",
+                description: "The amount of the ingredient"
+              }
+            ]
+          },
+          {
+            name: "instructions",
+            type: "string[]",
+            description: "The instructions of the recipe"
+          }
+        ]
+      }
+    ],
+    render: ({args}) => {
+      useEffect(() => {
+        console.log(args, "args.recipe")
+        updateRecipe(args?.recipe || {})
+      }, [args.recipe])
+      return <></>
+    }
+  })
 
   const [recipe, setRecipe] = useState(INITIAL_STATE.recipe);
   const { appendMessage, isLoading } = useCopilotChat();
@@ -279,11 +346,11 @@ function Recipe() {
   const handleDietaryChange = (preference: string, checked: boolean) => {
     if (checked) {
       updateRecipe({
-        special_preferences: [...recipe.special_preferences, preference],
+        dietary_preferences: [...recipe.dietary_preferences, preference],
       });
     } else {
       updateRecipe({
-        special_preferences: recipe.special_preferences.filter((p) => p !== preference),
+        dietary_preferences: recipe.dietary_preferences.filter((p) => p !== preference),
       });
     }
   };
@@ -420,14 +487,14 @@ function Recipe() {
 
       {/* Dietary Preferences */}
       <div className="section-container relative">
-        {changedKeysRef.current.includes("special_preferences") && <Ping />}
+        {changedKeysRef.current.includes("dietary_preferences") && <Ping />}
         <h2 className="section-title">Dietary Preferences</h2>
         <div className="dietary-options">
-          {Object.values(SpecialPreferences).map((option) => (
+          {dietaryOptions.map((option) => (
             <label key={option} className="dietary-option">
               <input
                 type="checkbox"
-                checked={recipe.special_preferences.includes(option)}
+                checked={recipe.dietary_preferences.includes(option)}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   handleDietaryChange(option, e.target.checked)
                 }
