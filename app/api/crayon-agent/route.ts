@@ -21,7 +21,9 @@ export async function POST(req: NextRequest) {
         {
           role: "system",
           content: `You are an AG UI agent that dynamically generates UI components based on conversation. 
-                   Create a bar chart with sample sales data when the user asks for charts.`
+                   You can create line, bar, pie, area, scatter, radar, heatmap, and gauge charts.
+                   When the user asks for a specific chart type, use that exact type in your function call.
+                   Generate appropriate sample data based on the user's request.`
         },
         ...messages
       ],
@@ -36,7 +38,7 @@ export async function POST(req: NextRequest) {
               properties: {
                 type: { 
                   type: "string", 
-                  enum: ["line", "bar", "pie"],
+                  enum: ["line", "bar", "pie", "area", "scatter", "radar", "heatmap", "gauge"],
                   description: "Type of visualization" 
                 },
                 title: { type: "string", description: "Title of the visualization" },

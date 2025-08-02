@@ -7,9 +7,18 @@ import {
   CalendarType, FileUploadType, SettingsPanelType, AnalyticsDashboardType
 } from "@/lib/schemas";
 
-// Import our existing component implementations
+// Import Recharts components for professional visualizations
 import { 
-  LineChart, BarChart, PieChart, Activity, TrendingUp, 
+  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  AreaChart, Area, ScatterChart, Scatter, RadarChart, Radar,
+  RadialBarChart, RadialBar, Treemap, Sunburst,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  PolarGrid, PolarAngleAxis, PolarRadiusAxis, LabelList
+} from 'recharts';
+
+// Import Lucide icons
+import { 
+  Activity, TrendingUp, 
   DollarSign, Users, Package, ShoppingCart, Calendar,
   ChevronRight, MoreVertical, Download, Share2, Filter,
   Search, Bell, Settings, Menu, X, Loader2, Send,
@@ -19,7 +28,7 @@ import {
   Bold, Italic, Underline, List, Link, Image, Code,
   Plus, Minus, Play, Pause, Trash2, Copy, Check,
   ChevronUp, ChevronDown, Maximize2, Minimize2,
-  Grid, BarChart3, PieChart as PieChartIcon,
+  Grid, BarChart3, PieChart as PieChartIcon, LineChart as LineChartIcon,
   SortAsc, SortDesc, ChevronLeft, Sliders, Palette
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,119 +38,272 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 
-// Chart color palette
+// Chart color palette - Purple-based theme
 const CHART_COLORS = [
-  "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
-  "#EC4899", "#06B6D4", "#84CC16", "#F97316", "#6366F1"
+  "#9333EA", "#A855F7", "#C084FC", "#D8B4FE", "#E9D5FF",
+  "#7C3AED", "#6D28D9", "#5B21B6", "#4C1D95", "#6366F1"
 ];
 
-// Visualization Response Template (Crayon-compatible)
+// Custom tooltip component
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border dark:border-gray-700">
+        <p className="font-medium text-gray-900 dark:text-gray-100">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} className="text-sm" style={{ color: entry.color }}>
+            {entry.name}: {entry.value.toLocaleString()}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+// Visualization Response Template with Recharts
 export function VisualizationTemplate({ type, title, data, config }: VisualizationType) {
   const getIcon = () => {
     switch (type) {
-      case "line": return <LineChart className="w-5 h-5" />;
-      case "bar": return <BarChart className="w-5 h-5" />;
-      case "pie": return <PieChart className="w-5 h-5" />;
+      case "line": return <LineChartIcon className="w-5 h-5" />;
+      case "bar": return <BarChart3 className="w-5 h-5" />;
+      case "pie": return <PieChartIcon className="w-5 h-5" />;
+      case "area": return <Activity className="w-5 h-5" />;
+      case "scatter": return <Grid className="w-5 h-5" />;
+      case "radar": return <Activity className="w-5 h-5" />;
       default: return <Activity className="w-5 h-5" />;
     }
   };
 
   const renderChart = () => {
+    // Transform data for multi-series if needed
+    const isMultiSeries = data.length > 0 && typeof data[0].value === 'object';
+    
     switch (type) {
       case "line":
         return (
-          <div className="h-64 flex items-end justify-between gap-2 px-4">
-            {data.map((point, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                <div 
-                  className="w-full bg-gradient-to-t from-purple-600 to-purple-400 rounded-t animate-grow-up"
-                  style={{ 
-                    height: `${(point.value / Math.max(...data.map(d => d.value))) * 100}%`,
-                    animationDelay: `${i * 0.1}s`
-                  }}
-                />
-                <span className="text-xs text-gray-500 dark:text-gray-400">{point.label}</span>
-              </div>
-            ))}
-          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
+              <XAxis 
+                dataKey="label" 
+                className="text-gray-600 dark:text-gray-400"
+                tick={{ fill: 'currentColor', fontSize: 12 }}
+              />
+              <YAxis 
+                className="text-gray-600 dark:text-gray-400"
+                tick={{ fill: 'currentColor', fontSize: 12 }}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="value" 
+                stroke="#9333EA" 
+                strokeWidth={2}
+                dot={{ fill: '#9333EA', r: 4 }}
+                activeDot={{ r: 6 }}
+                animationDuration={1000}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         );
       
       case "bar":
         return (
-          <div className="h-64 flex flex-col justify-between gap-2 p-4">
-            {data.slice(0, 5).map((item, i) => (
-              <div key={i} className="flex items-center gap-3 group/bar hover:scale-105 transition-all duration-300">
-                <span className="text-sm w-24 text-gray-600 dark:text-gray-400 group-hover/bar:text-purple-600 dark:group-hover/bar:text-purple-400 transition-colors duration-300">{item.label}</span>
-                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-8 overflow-hidden group-hover/bar:shadow-lg transition-all duration-300">
-                  <div 
-                    className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full flex items-center justify-end px-3 animate-expand transition-all duration-500 group-hover/bar:from-purple-500 group-hover/bar:to-purple-300"
-                    style={{ 
-                      "--target-width": `${(item.value / Math.max(...data.map(d => d.value))) * 100}%`,
-                      animationDelay: `${i * 0.1}s`
-                    } as any}
-                  >
-                    <span className="text-xs text-white font-medium">{item.value.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
+              <XAxis 
+                dataKey="label" 
+                className="text-gray-600 dark:text-gray-400"
+                tick={{ fill: 'currentColor', fontSize: 12 }}
+              />
+              <YAxis 
+                className="text-gray-600 dark:text-gray-400"
+                tick={{ fill: 'currentColor', fontSize: 12 }}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="value" fill="#9333EA" radius={[8, 8, 0, 0]} animationDuration={1000}>
+                <LabelList dataKey="value" position="top" className="fill-gray-600 dark:fill-gray-400" />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         );
 
       case "pie":
-        const total = data.reduce((sum, item) => sum + item.value, 0);
-        let currentAngle = 0;
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+                animationBegin={0}
+                animationDuration={1000}
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        );
+
+      case "area":
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
+              <XAxis 
+                dataKey="label" 
+                className="text-gray-600 dark:text-gray-400"
+                tick={{ fill: 'currentColor', fontSize: 12 }}
+              />
+              <YAxis 
+                className="text-gray-600 dark:text-gray-400"
+                tick={{ fill: 'currentColor', fontSize: 12 }}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Area 
+                type="monotone" 
+                dataKey="value" 
+                stroke="#9333EA" 
+                fill="#9333EA" 
+                fillOpacity={0.3}
+                animationDuration={1000}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        );
+
+      case "scatter":
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <ScatterChart margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
+              <XAxis 
+                type="number" 
+                dataKey="x" 
+                name="X" 
+                className="text-gray-600 dark:text-gray-400"
+                tick={{ fill: 'currentColor', fontSize: 12 }}
+              />
+              <YAxis 
+                type="number" 
+                dataKey="y" 
+                name="Y" 
+                className="text-gray-600 dark:text-gray-400"
+                tick={{ fill: 'currentColor', fontSize: 12 }}
+              />
+              <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
+              <Scatter 
+                name="Data" 
+                data={data.map(d => ({ x: d.value, y: d.value * Math.random() }))} 
+                fill="#9333EA"
+                animationDuration={1000}
+              />
+            </ScatterChart>
+          </ResponsiveContainer>
+        );
+
+      case "radar":
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <RadarChart data={data}>
+              <PolarGrid className="stroke-gray-200 dark:stroke-gray-700" />
+              <PolarAngleAxis 
+                dataKey="label" 
+                className="text-gray-600 dark:text-gray-400"
+                tick={{ fill: 'currentColor', fontSize: 12 }}
+              />
+              <PolarRadiusAxis 
+                className="text-gray-600 dark:text-gray-400"
+                tick={{ fill: 'currentColor', fontSize: 12 }}
+              />
+              <Radar 
+                name="Value" 
+                dataKey="value" 
+                stroke="#9333EA" 
+                fill="#9333EA" 
+                fillOpacity={0.6}
+                animationDuration={1000}
+              />
+              <Tooltip content={<CustomTooltip />} />
+            </RadarChart>
+          </ResponsiveContainer>
+        );
+
+      case "heatmap":
+        // For heatmap, we'll use a treemap as a substitute
+        return (
+          <ResponsiveContainer width="100%" height={300}>
+            <Treemap
+              data={[{ 
+                name: 'root', 
+                children: data.map(d => ({ name: d.label, size: d.value }))
+              }]}
+              dataKey="size"
+              aspectRatio={4/3}
+              stroke="#fff"
+              fill="#9333EA"
+              animationDuration={1000}
+            >
+              <Tooltip content={<CustomTooltip />} />
+            </Treemap>
+          </ResponsiveContainer>
+        );
+
+      case "gauge":
+        // Use RadialBarChart for gauge
+        const gaugeData = [{
+          name: title,
+          value: data[0]?.value || 0,
+          fill: '#9333EA'
+        }];
         
         return (
-          <div className="h-64 flex items-center justify-center">
-            <div className="relative w-48 h-48">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                {data.map((segment, i) => {
-                  const percentage = (segment.value / total) * 100;
-                  const strokeDasharray = `${percentage} ${100 - percentage}`;
-                  const strokeDashoffset = -currentAngle;
-                  const angle = currentAngle;
-                  currentAngle += percentage;
-                  
-                  return (
-                    <circle
-                      key={i}
-                      cx="50"
-                      cy="50"
-                      r="15.915"
-                      fill="transparent"
-                      stroke={CHART_COLORS[i % CHART_COLORS.length]}
-                      strokeWidth="8"
-                      strokeDasharray={strokeDasharray}
-                      strokeDashoffset={strokeDashoffset}
-                      className="animate-draw"
-                      style={{ animationDelay: `${i * 0.3}s` }}
-                    />
-                  );
-                })}
-              </svg>
-              
-              {/* Legend */}
-              <div className="absolute -right-24 top-0 space-y-2">
-                {data.map((segment, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm">
-                    <div 
-                      className="w-3 h-3 rounded-full animate-scale-in"
-                      style={{ 
-                        backgroundColor: CHART_COLORS[i % CHART_COLORS.length],
-                        animationDelay: `${i * 0.1}s`
-                      }}
-                    />
-                    <span className="text-gray-600 dark:text-gray-400">{segment.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <RadialBarChart 
+              cx="50%" 
+              cy="50%" 
+              innerRadius="60%" 
+              outerRadius="90%" 
+              barSize={10} 
+              data={gaugeData}
+              startAngle={180}
+              endAngle={0}
+            >
+              <PolarAngleAxis
+                type="number"
+                domain={[0, 100]}
+                angleAxisId={0}
+                tick={false}
+              />
+              <RadialBar
+                background
+                dataKey="value"
+                cornerRadius={10}
+                fill="#9333EA"
+                animationDuration={1000}
+              />
+              <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-3xl font-bold fill-gray-900 dark:fill-gray-100">
+                {gaugeData[0].value}%
+              </text>
+              <Tooltip />
+            </RadialBarChart>
+          </ResponsiveContainer>
         );
 
       default:
-        return <div className="h-64 flex items-center justify-center text-gray-500">Chart type not supported</div>;
+        return <div className="h-64 flex items-center justify-center text-gray-500">Chart type "{type}" coming soon!</div>;
     }
   };
 
