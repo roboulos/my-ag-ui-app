@@ -2,181 +2,143 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 🚨 FINAL IMPLEMENTATION STATUS: PRODUCTION READY
+## 🚨 CRITICAL UPDATE (2025-08-02): Complete Rewrite Based on AG UI Dojo
 
-### What AG UI Actually Is
-AG UI (Agent-User Interaction Protocol) is about **dynamic, real-time UI generation** based on conversation context. It is NOT about switching between pre-made views.
+### 🔴 BREAKING DISCOVERY: AG UI Does NOT Support Charting Libraries
+After extensive investigation and attempting multiple implementations, we discovered that **AG UI fundamentally does not work with charting libraries like Recharts, Chart.js, or any other visualization libraries**. The AG UI dojo example uses **ONLY CSS-based visualizations**.
 
-### ✅ PRODUCTION IMPLEMENTATION (COMPLETED 2025-08-02)
-The application is now a **fully integrated, production-ready AG UI Dashboard** with:
-- **CopilotKit Integration**: 72-line professional AI implementation vs 1,887-line custom solution
-- **Split-screen layout**: Main content area (left) + Professional AI Chat (right)
-- **Real-time Collaboration**: Multi-user WebSocket synchronization with live state sharing
-- **20+ AI Actions**: Complete dashboard control through natural language commands
-- **13+ Dynamic Components**: Professional component generation with factory system
-- **Advanced Analytics**: Performance analysis, anomaly detection, trend prediction, reporting
+### ✅ NEW FOUNDATION: Dojo Recipe Example
+We've completely rewritten the app using the working recipe example from `ag-ui-protocol/ag-ui` repository. This is now our foundation because:
+1. **It actually works** - No hydration errors, no WebSocket issues
+2. **Proper CopilotKit integration** - Uses `useCoAgent` for state management
+3. **CSS-only visualizations** - All UI is pure CSS/Tailwind
+4. **Mobile-responsive** - Pull-up chat for mobile, sidebar for desktop
 
-### 🔑 Key Implementation Details
+## 🎓 HARD-WON LEARNINGS FROM AG UI INVESTIGATION
 
-#### 1. Frontend Architecture (app/page.tsx)
+### 1. **Recharts/Charting Libraries DON'T WORK in AG UI**
+- Spent hours trying to make Recharts work - it fundamentally doesn't
+- AG UI dojo has ZERO charting library dependencies
+- All visualizations must be CSS-based (progress bars, cards, etc.)
+- This is likely due to SSR/hydration issues with dynamic chart rendering
+
+### 2. **CopilotKit Pattern is Different**
+The dojo uses a specific pattern with CopilotKit 1.9.2:
 ```typescript
-// CRITICAL: Direct fetch implementation for SSE - DO NOT use HttpAgent
-const response = await fetch("/api/agent", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ messages, threadId, runId })
+// They use useCoAgent for state management
+const { state: agentState, setState: setAgentState } = useCoAgent<RecipeAgentState>({
+  name: "recipe_agent",
+  initialState: INITIAL_STATE,
 });
 
-// Parse SSE events manually
-const reader = response.body?.getReader();
-const decoder = new TextDecoder();
-let buffer = "";
-
-// Process events with proper event.type handling
-switch (event.type) {
-  case "TEXT_MESSAGE_CONTENT":
-    // Update assistant message in chat
-    break;
-  case "STATE_DELTA":
-    // Add components to main screen
-    break;
-}
+// NOT the useCopilotAction with parameters we were trying
 ```
 
-#### 2. Backend Event Streaming (app/api/agent/route.ts)
-```typescript
-// CRITICAL: STATE_DELTA events update the UI
-await writer.write(encoder.encode(formatSSE({
-  type: EventType.STATE_DELTA,
-  delta: [{
-    op: "add",
-    path: "/components/-",
-    value: {
-      component: {
-        id: generateId("comp"),
-        type: toolCall.name,        // matches function name
-        props: parsedArgs,           // from OpenAI function call
-        timestamp: new Date().toISOString()
-      }
-    }
-  }]
-})));
+### 3. **Mobile Chat Implementation**
+The mobile chat is a sophisticated pull-up drawer with:
+- Custom drag-to-resize functionality
+- Separate mobile detection hook
+- Different UI components for mobile vs desktop
+- CSS transforms for smooth animations
+
+### 4. **File Structure from Dojo**
+```
+/app/page.tsx              # Main component with CopilotKit wrapper
+/app/recipe.css            # All custom CSS (no Tailwind components)
+/utils/use-mobile-view.ts  # Mobile detection
+/utils/use-mobile-chat.ts  # Pull-up chat logic
 ```
 
-#### 3. Component Rendering Pattern
-- Components have a `type` that matches the tool name (e.g., "generateVisualization")
-- Components have `props` containing all configuration from the AI
-- Components are added to state via STATE_DELTA events
-- ComponentRenderer switches on type to render the appropriate component
-
-### 🎯 Critical Learnings from Implementation
-
-1. **DO NOT USE @ag-ui/client HttpAgent** 
-   - It doesn't work as expected for this use case
-   - Use direct fetch with manual SSE parsing instead
-   - The HttpAgent might be for different AG UI patterns
-
-2. **Chat Sidebar Positioning**
-   - Chat goes on the RIGHT side (like dojo example)
-   - Main content area on the LEFT
-   - This is the expected AG UI pattern
-
-3. **Component Rendering Location**
-   - Components MUST render on main screen
-   - NEVER render components in the chat
-   - Chat is purely for conversation
-
-4. **OpenAI Tool Definitions**
-   - Must have precise JSON schemas
-   - Arrays need item definitions
-   - Objects need property definitions
-   - Use additionalProperties for flexible objects
-
-5. **SSE Event Format**
-   - Convert snake_case to camelCase for JavaScript
-   - Handle buffering for incomplete lines
-   - Parse "data: " prefix correctly
-   - Process multiple events in one chunk
-
-6. **State Management**
-   - Keep messages array for chat history
-   - Keep components array for rendered UI
-   - Track assistant message separately while streaming
-   - Update both in real-time
-
-### 🎯 FINAL IMPLEMENTATION STATUS (Production Ready)
-
-#### ✅ COMPLETED: CopilotKit Implementation (Production Grade)
-The application now uses **CopilotKit** as the primary AI integration, replacing the custom SSE implementation:
-
-##### 1. CopilotKit Runtime Integration
+### 5. **API Route Simplicity**
+The CopilotKit API route is much simpler than our custom implementation:
 ```typescript
-// app/api/copilotkit/route.ts - 72 lines total vs 1,887 line custom solution
-const copilotKit = new CopilotRuntime();
+const runtime = new CopilotRuntime();
 const handler = copilotRuntimeNextJSAppRouterEndpoint({
   runtime: copilotKit,
-  serviceAdapter: new OpenAIAdapter({ 
-    model: "gpt-4",
-    apiKey: process.env.OPENAI_API_KEY
-  }),
+  serviceAdapter: new OpenAIAdapter({ model: "gpt-4" }),
   endpoint: "/api/copilotkit"
 });
 ```
 
-##### 2. Context-Aware State Management (contexts/DashboardContext.tsx)
-```typescript
-// 20+ CopilotKit Actions for complete dashboard control
-useCopilotAction({ name: "updateDashboardLayout", ... });
-useCopilotAction({ name: "addDashboardMetric", ... });
-useCopilotAction({ name: "generateComponent", ... });
-useCopilotAction({ name: "analyzePerformance", ... });
-useCopilotAction({ name: "setupDashboardForRole", ... });
+### 6. **CSS-Only Visualizations Examples**
+From the dojo recipe app:
+- Progress indicators: CSS circles with connecting lines
+- Cards: Box shadows and hover transforms
+- Animations: Pure CSS keyframes
+- Ping effects: CSS animation for state changes
+- No external visualization libraries whatsoever
 
-// Bidirectional AI awareness
-useCopilotReadable({
-  description: "Current dashboard configuration and state",
-  value: dashboardState
-});
+### What AG UI Actually Is
+AG UI (Agent-User Interaction Protocol) is about **dynamic, real-time UI generation** based on conversation context. It is NOT about switching between pre-made views.
+
+## 🚀 CURRENT STATUS: Recipe Foundation Working
+
+### What We Have Now
+- **Working Recipe App**: Direct copy from AG UI dojo that actually works
+- **CopilotKit 1.9.3**: Latest version with proper integration
+- **Mobile-Responsive**: Pull-up chat for mobile, sidebar for desktop
+- **CSS-Only UI**: No charting libraries, pure CSS visualizations
+- **Clean Foundation**: Ready to build upon with AG UI patterns
+
+### Next Steps
+1. **Understand the Recipe Pattern**: Study how the dojo implements state management
+2. **Create CSS Visualizations**: Build charts using CSS/Tailwind instead of libraries
+3. **Extend Component Types**: Add more dynamic components beyond recipes
+4. **Implement True AG UI**: Dynamic component generation based on conversation
+
+## 🔧 How to Work with This Codebase
+
+### Starting Point
+We now have the AG UI dojo recipe example as our foundation. This is a working implementation that you can build upon.
+
+### Key Files to Understand
+1. **app/page.tsx** - Main component with CopilotKit wrapper and recipe UI
+2. **app/recipe.css** - All the CSS styles (study the CSS-only patterns)
+3. **utils/use-mobile-*.ts** - Mobile responsive hooks
+4. **app/api/copilotkit/route.ts** - Simple CopilotKit API endpoint
+
+### When Adding New Features
+1. **NO CHARTING LIBRARIES** - Use CSS/Tailwind for all visualizations
+2. **Follow the Recipe Pattern** - Study how state management works with useCoAgent
+3. **Mobile First** - Always test on mobile view
+4. **CSS Animations** - Use keyframes and transforms for all animations
+
+## Commands
+
+### 🚀 SERVER MANAGEMENT
+```bash
+# Check if server is running
+lsof -i :3004
+
+# Start server
+NEXT_LINT=false PORT=3004 npm run dev &
+
+# Kill server
+lsof -ti:3004 | xargs kill -9
+
+# Restart server
+lsof -ti:3004 | xargs kill -9 && sleep 2 && NEXT_LINT=false PORT=3004 npm run dev &
 ```
 
-##### 3. Professional Chat Interface (components/chat/PremiumChatSidebar.tsx)
-```typescript
-// Premium chat with conversation history and AI context
-<CopilotSidebar
-  instructions="You are an AI assistant that can read and modify the dashboard state in real-time..."
-  defaultOpen={true}
-  clickOutsideToClose={false}
-/>
+### 🛠 DEVELOPMENT COMMANDS
+```bash
+# Install dependencies
+npm install
+
+# Type checking
+npm run typecheck
+
+# Linting
+npm run lint
+
+# Git workflow
+git add -A && git status
+git commit -m "feat: [description]"
+git push origin [branch-name]
 ```
 
-#### 🚀 FINAL ARCHITECTURE (Production Ready)
+## 🎨 Visual Development with Playwright MCP
 
-##### Application Structure:
-```
-✅ Split-screen layout: Dashboard (left) + AI Chat (right)
-✅ CopilotKit runtime for AI integration
-✅ Real-time collaboration with WebSocket infrastructure  
-✅ 13+ dynamic component types with professional styling
-✅ Advanced analytics with predictive capabilities
-✅ Role-based dashboard configuration
-✅ Comprehensive reporting system
-```
-
-##### Key Features Achieved:
-- **72-line CopilotKit Implementation** vs 1,887-line custom solution
-- **20+ AI Actions** for complete dashboard control through natural language
-- **Real-time Multi-user Collaboration** with WebSocket synchronization
-- **13+ Dynamic Component Types** (gauges, heatmaps, sparklines, funnels, etc.)
-- **Advanced Analytics Suite** (performance analysis, anomaly detection, trend prediction)
-- **Professional Business Reports** (weekly, monthly, quarterly with insights)
-- **Role-based Setup** (CEO, Manager, Analyst, Developer, Sales, Marketing)
-- **Comprehensive Type Safety** with full TypeScript coverage
-
-##### Status: **PRODUCTION READY** ✅
-
-## 🎨 Development Workflow
-
-### Visual Development with Playwright MCP
 **ALWAYS use Playwright MCP for visual verification:**
 
 1. **Make a change** → Take screenshot
@@ -186,64 +148,11 @@ useCopilotReadable({
 5. **Document** → Screenshot final result
 
 ```bash
-# Essential Playwright commands to use frequently
+# Essential Playwright commands
 mcp__playwright__browser_navigate       # Navigate to http://localhost:3004
 mcp__playwright__browser_take_screenshot # Capture current state
 mcp__playwright__browser_click          # Test interactions
-mcp__playwright__browser_snapshot       # Get page structure
-```
-
-### Using Subagents for Complex Tasks
-For complex implementations, use the Task tool with subagents:
-- Subagents should use Playwright MCP extensively
-- They should iterate based on visual feedback
-- Goal: Achieve world-class polish through iteration
-
-## Commands
-
-### 🚀 SERVER MANAGEMENT - 100% EFFICIENT
-**Use EXACTLY these commands. No variations. No creativity.**
-
-```bash
-# ✅ CHECK STATUS (always run first)
-lsof -i :3004
-
-# ✅ START SERVER (only if nothing running on port 3004)
-NEXT_LINT=false PORT=3004 npm run dev &
-
-# ✅ KILL SERVER (if needed to restart)
-lsof -ti:3004 | xargs kill -9
-
-# ✅ RESTART SERVER (kill then start)
-lsof -ti:3004 | xargs kill -9 && sleep 2 && NEXT_LINT=false PORT=3004 npm run dev &
-
-# ✅ VERIFY RUNNING (after start/restart)
-curl -I http://localhost:3004 --max-time 5
-
-# ❌ NEVER USE THESE:
-# - kill -9 <pid> (manual process hunting)
-# - PORT=3004 npm run dev (without NEXT_LINT=false)
-# - Background processes without &
-# - Multiple server start attempts
-# - ps aux | grep commands
-```
-
-### 🛠 DEVELOPMENT COMMANDS
-
-```bash
-# Build & Validation
-npm run build            # Production build (has issues - use dev)
-npm run lint             # Run ESLint
-npm run typecheck        # Type checking
-
-# Git Workflow
-git add -A && git status
-git commit -m "feat: [description]"
-git push origin main
-
-# Environment Setup
-cp .env.local.example .env.local
-# Add OPENAI_API_KEY to .env.local
+mcp__playwright__browser_resize         # Test mobile view (400x800)
 ```
 
 ## Architecture
@@ -251,354 +160,54 @@ cp .env.local.example .env.local
 ### Core Stack
 - **Next.js 15.4.5** with App Router and Turbopack
 - **React 19.1.0** with TypeScript 5.x
-- **OpenAI SDK** for AI tool calling and responses
-- **Server-Sent Events (SSE)** for real-time streaming
-- **Tailwind CSS v4** for styling
-- **Lucide React** for icons
+- **CopilotKit 1.9.3** for AI integration
+- **Tailwind CSS v4** for styling (CSS-only visualizations)
+- **NO CHARTING LIBRARIES** - Pure CSS for all visualizations
 
-### Current Structure (WORKING)
+### Current Structure
 ```
 /app
-  /api/agent/route.ts         # SSE endpoint for AI agent
-  page.tsx                    # Split-screen layout with dynamic components
-  providers.tsx               # Simple wrapper (no longer uses CopilotKit)
+  /api/copilotkit/route.ts    # CopilotKit API endpoint
+  page.tsx                    # Recipe app with mobile/desktop UI
+  recipe.css                  # All custom CSS styles
+  providers.tsx               # Simple wrapper (no longer complex)
   layout.tsx                  # Root layout
+/utils
+  use-mobile-view.ts          # Mobile detection hook
+  use-mobile-chat.ts          # Pull-up chat functionality
 ```
-
-### Key Files Explained
-
-#### `/app/api/agent/route.ts`
-- Handles POST requests with message history
-- Streams SSE events back to client
-- Calls OpenAI with tool definitions
-- Emits STATE_DELTA events for UI updates
-- Properly formats events with camelCase conversion
-
-#### `/app/page.tsx`
-- Split-screen layout (content left, chat right)
-- Direct fetch implementation for SSE
-- Manual event parsing and buffering
-- Component state management
-- Dynamic component rendering based on type
 
 ## Key Development Principles
 
-### 1. Dynamic Over Static
-- **Never** create mock data arrays
-- **Never** build pre-defined chart components
-- **Always** generate UI based on conversation context
+### 1. CSS-Only Visualizations
+- **Never** use charting libraries (Recharts, Chart.js, etc.)
+- **Always** create visualizations with CSS/Tailwind
+- Study the recipe app's CSS patterns for examples
 
-### 2. Visual Excellence Through Iteration
-- Use Playwright to see every change
-- Take before/after screenshots
-- Iterate until the UI looks premium
-- Test all hover states and animations
+### 2. Mobile-First Development
+- Test on mobile view (400x800) frequently
+- Ensure pull-up chat works smoothly
+- Desktop is secondary - mobile must be perfect
 
-### 3. Proper AG UI Implementation
-- Components should stream in as conversation evolves
-- UI morphs and changes based on discussion
-- Infinite possibilities, not limited options
-- Real-time generation, not view switching
+### 3. Follow Dojo Patterns
+- Use `useCoAgent` for state management
+- Keep API routes simple
+- CSS animations over JavaScript animations
+- Pure components without external dependencies
 
-## Common Pitfalls to Avoid
+## 🐛 Common Issues and Solutions
 
-❌ **DON'T:**
-- Create static mockDocuments arrays
-- Build pre-made chart components
-- Switch between fixed views
-- Hardcode data structures
+### Issue: "Agent 'recipe_agent' was not found"
+**Solution**: This is a console warning that doesn't affect functionality. The agent needs to be configured in the CopilotKit runtime if you want to use AI features.
 
-✅ **DO:**
-- Generate components dynamically
-- Create data based on conversation
-- Stream UI updates in real-time
-- Allow infinite UI possibilities
+### Issue: Components not rendering
+**Solution**: Make sure you're not using any charting libraries. All visualizations must be CSS-based.
 
-## Testing Strategy
-
-1. **Start dev server:** `PORT=3004 npm run dev`
-2. **Open Playwright:** Navigate to http://localhost:3004
-3. **Screenshot baseline:** Capture initial state
-4. **Make changes:** Implement features
-5. **Visual verification:** Screenshot and compare
-6. **Test interactions:** Click, hover, type
-7. **Iterate:** Refine until world-class
-
-## 🔧 Troubleshooting Common Issues
-
-### Components Not Appearing
-1. Check browser console for SSE parsing errors
-2. Verify STATE_DELTA events are being sent
-3. Ensure component type matches renderer case
-4. Check that props are valid JSON
-
-### Chat Not Working
-1. Verify OPENAI_API_KEY is set in .env.local
-2. Check network tab for 200 response
-3. Look for streaming events in console
-4. Ensure messages array includes role/content
-
-### SSE Connection Drops
-1. Check for server errors in terminal
-2. Verify no timeout on long responses
-3. Ensure proper error handling in try/catch
-4. Check CORS headers if deployed
-
-### TypeScript Errors
-1. Run `npm run typecheck` to see all errors
-2. Check tool definition schemas match usage
-3. Ensure all component props are typed
-4. Verify event types match AG UI protocol
-
-## Potential Enhancements
-
-1. **Add more component types**: Maps, timelines, kanban boards, etc.
-2. **Implement component interactions**: Click handlers, data updates
-3. **Add component persistence**: Save/load generated UIs
-4. **Enhance animations**: More sophisticated transitions
-5. **Add component editing**: Allow users to modify generated components
-6. **Implement export functionality**: Export components as code/images
-
-## 🎨 Thesys-Inspired Premium Design System
-
-### Theme Configuration
-The app uses a comprehensive CSS variable system for consistent theming:
-
-```css
-/* Light mode (default) */
-:root {
-  --background: 255 255 255;
-  --foreground: 0 0 0;
-  --primary: 147 51 234;      /* Purple accent #9333ea */
-  --purple-600: #9333ea;       /* Main purple for accents */
-}
-
-/* Dark mode */
-.dark {
-  --background: 15 15 15;     /* Near black */
-  --foreground: 245 245 245;  /* Near white */
-  --primary: 147 51 234;      /* Same purple works in both modes */
-}
-```
-
-### Design Principles
-1. **Purple Accent Theme**: All primary actions and highlights use purple (#9333ea)
-2. **Card-Based Layout**: All components use rounded-2xl with shadow-xl
-3. **Dark Mode First**: Designed primarily for dark mode with elegant light mode
-4. **Smooth Transitions**: All interactive elements have duration-150 or duration-300
-5. **Hover Effects**: Scale transforms (hover:scale-[1.02]) and shadow increases
-
-### Component Styling Pattern
-```typescript
-// Standard component wrapper
-<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-2xl p-6 
-                border border-gray-200 dark:border-gray-700 
-                hover:shadow-2xl dark:hover:shadow-purple-500/10 
-                transition-all duration-300">
-```
-
-## 📊 Component Implementation Patterns
-
-### KPI Card Component
-```typescript
-function KPICard({ title, value, change, icon, trend }: {
-  title: string;        // e.g., "Total Revenue"
-  value: string;        // e.g., "$1,200,000"
-  change: string;       // e.g., "+15%"
-  icon: "revenue" | "users" | "sales" | "products" | "activity";
-  trend: "up" | "down";
-}) {
-  // Color coding based on trend
-  const changeColor = trend === "up" 
-    ? "text-green-600 dark:text-green-400" 
-    : "text-red-600 dark:text-red-400";
-  
-  // Icon with purple background
-  <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl 
-                  text-purple-600 dark:text-purple-400">
-    {getIcon()}
-  </div>
-}
-```
-
-### Chart Styling Updates
-- Replace all blue colors with purple gradients
-- Use `from-purple-600 to-purple-400` for gradients
-- Apply `toLocaleString()` for number formatting
-- Add hover states for interactive elements
-
-### Dashboard Component Fix
-```typescript
-// CRITICAL: When rendering nested components in a dashboard
-<ComponentRenderer component={{ 
-  ...comp, 
-  id: `${i}`,
-  type: comp.type || "generateVisualization",  // Ensure type is set
-  props: comp.props || comp,                   // Handle both formats
-  timestamp: new Date().toISOString()
-}} />
-```
-
-## 🎭 Animation Classes
-
-### Custom Animations (in globals.css)
-```css
-/* Slide up animation for cards */
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-slide-up { animation: slide-up 0.6s ease-out forwards; }
-
-/* Count up for numbers */
-@keyframes count-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-count-up { animation: countUp 0.8s ease-out forwards; }
-
-/* Expand animation for bars */
-@keyframes expand {
-  from { width: 0%; opacity: 0; }
-  to { width: var(--target-width); opacity: 1; }
-}
-.animate-expand { animation: expand 1s ease-out forwards; }
-```
-
-### Animation Usage Pattern
-```typescript
-// Stagger animations with delay
-{items.map((item, i) => (
-  <div 
-    key={i} 
-    className="animate-fade-in" 
-    style={{ animationDelay: `${i * 0.1}s` }}
-  >
-    {item}
-  </div>
-))}
-```
-
-## 🐛 Known Issues and Solutions
-
-### Issue 1: Dashboard Components Not Rendering
-**Problem**: Nested components in dashboards don't appear
-**Solution**: Ensure each nested component has proper type and props structure
-```typescript
-// In DynamicDashboard component
-type: comp.type || "generateVisualization",
-props: comp.props || comp,
-```
-
-### Issue 2: Dark Mode Toggle
-**Solution**: Apply dark class to root element
-```typescript
-<div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
-```
-
-### Issue 3: OpenAI Multiple Tool Calls
-**Current Limitation**: OpenAI typically only calls one tool at a time
-**Workaround**: Request specific components individually or use dashboard for multiple
-
-## 🔧 Backend Tool Definition Pattern
-
-### Adding New Tools (e.g., generateKPI)
-1. Add to TypeScript ComponentType union:
-```typescript
-type ComponentType = "generateVisualization" | "generateDashboard" | 
-                    "generateForm" | "generateTable" | "generateKPI";
-```
-
-2. Add tool definition in route.ts:
-```typescript
-{
-  type: "function",
-  function: {
-    name: "generateKPI",
-    description: "Generate a KPI (Key Performance Indicator) card",
-    parameters: {
-      type: "object",
-      properties: {
-        title: { type: "string", description: "KPI title/label" },
-        value: { type: "string", description: "Main value" },
-        change: { type: "string", description: "Change %" },
-        icon: { type: "string", enum: ["revenue", "users", "sales"] },
-        trend: { type: "string", enum: ["up", "down"] }
-      },
-      required: ["title", "value", "change", "trend"]
-    }
-  }
-}
-```
-
-3. Add to ComponentRenderer switch:
-```typescript
-case "generateKPI":
-  return <KPICard {...component.props} />;
-```
-
-4. Add description helper:
-```typescript
-case "generateKPI":
-  return `I've created a KPI card showing "${props.title}" with a value of ${props.value}.`;
-```
-
-## 🎯 Visual Development Best Practices
-
-### Iterative Design Process
-1. **Always use Playwright** for visual verification
-2. **Take screenshots** after every significant change
-3. **Test both light and dark modes** for each component
-4. **Verify hover states** with browser_hover
-5. **Check responsive behavior** at different viewport sizes
-
-### Testing Workflow
-```bash
-# 1. Make component changes
-# 2. Take screenshot
-mcp__playwright__browser_take_screenshot --filename "before-styling.png"
-
-# 3. Apply styling updates
-# 4. Take comparison screenshot
-mcp__playwright__browser_take_screenshot --filename "after-styling.png"
-
-# 5. Test interactions
-mcp__playwright__browser_hover --element "KPI card" --ref "e123"
-
-# 6. Toggle dark mode
-mcp__playwright__browser_click --element "Theme toggle" --ref "e13"
-```
-
-## 📦 Complete Working Stack
-
-### Core Dependencies (Confirmed Working)
-```json
-{
-  "dependencies": {
-    "next": "15.4.5",           // App Router + Turbopack
-    "react": "19.1.0",          // Latest React
-    "openai": "^4.104.0",       // Tool calling support
-    "lucide-react": "^0.536.0", // Icon library
-    "tailwindcss": "^4"         // v4 with new features
-  }
-}
-```
-
-### Tailwind Configuration
-- Uses Tailwind CSS v4 with `@import "tailwindcss"`
-- Custom animations defined in globals.css
-- CSS variables for theming with RGB values
-- Dark mode with class strategy
+### Issue: Mobile chat not working
+**Solution**: Check that both mobile hooks are imported and the viewport is under 768px width.
 
 ## Important Context
 
-This project successfully demonstrates the AG UI protocol's power for dynamic, generative UI with a premium Thesys-inspired design. The implementation features:
+This project represents a complete pivot from trying to force charting libraries into AG UI (which doesn't work) to embracing the CSS-only approach demonstrated in the official AG UI dojo. The recipe example is our foundation because it's the only working example we found that properly implements AG UI patterns.
 
-1. **Complete theming system** with CSS variables for easy customization
-2. **Purple accent theme** throughout all components
-3. **Smooth dark mode** transitions with proper contrast
-4. **Professional animations** that enhance user experience
-5. **Working SSE implementation** without @ag-ui/client dependencies
-6. **Visual-first development** using Playwright for quality assurance
-
-The key insight is that visual iteration with Playwright is essential for achieving premium UI quality. Every change should be visually verified, tested in both themes, and refined until it meets professional standards.
+The key insight is that AG UI requires a different mindset - instead of reaching for visualization libraries, we must craft everything with CSS. This ensures compatibility with the SSR/hydration requirements of the AG UI protocol.
